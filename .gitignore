@@ -1,0 +1,7 @@
+# Build artifacts (PlatformIO) — do not commit
+.pio/
+.pioenvs/
+.cache/
+*.bin
+.pioenvs/
+*.elf
