@@ -147,8 +147,8 @@ void handleInput() {
         angle = constrain(angle + d, minAng, maxAng);
         break;
 case SETTINGS:
-if (settingField == 0)      minUs       = constrain(minUs + d * 1, 100, 500);
-else if (settingField == 1) maxUs       = constrain(maxUs + d * 1, 1800, 2600);
+if (settingField == 0)      minUs       = constrain(minUs + d * 10, 100, 500);
+else if (settingField == 1) maxUs       = constrain(maxUs + d * 10, 1800, 2600);
 if (minUs >= maxUs) minUs = maxUs - 1;  // protección cruzada
         break;
       default:
