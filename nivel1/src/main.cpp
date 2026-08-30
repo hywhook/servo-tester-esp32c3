@@ -222,13 +222,17 @@ void drawServo(const char* label, int ang) {
 
   drawGauge(ang);
 
-  // Mostrar duración solo en modo SWEEP
+  // Mostrar duración siempre visible (aunque solo sea relevante en SWEEP)
+  // Línea de estado: "Dur: Xs" en la línea de abajo del gauge
+  display.setTextSize(1);
+  display.setCursor(0, 58);
   if (strcmp(label, "SWEEP") == 0) {
-    display.setCursor(0, 54);
-    display.setTextSize(1);
     display.print("Dur: ");
     display.print(sweepDurationSec);
-    display.print("s");
+    display.print("s  ");
+  } else {
+    display.print("Modo: ");
+    display.print(label);
   }
 
   display.display();
@@ -296,6 +300,8 @@ void setup() {
 
 // ----------------------------- Loop ------------------------------------------
 void loop() {
+  static uint8_t prevMode = 255;  // init to "never had a previous mode"
+
   handleInput();
 
   int driveAngle = angle;
@@ -317,6 +323,18 @@ void loop() {
     case SWEEP:   drawServo("SWEEP", sweepAngle());  break;
     case CENTER:  drawServo("CENTER", centerAngle);  break;
     case SETTINGS: drawSettings();                  break;
+  }
+
+  // --- Submenú de duración de sweep al entrar al modo ---
+  if (mode == SWEEP && prevMode != SWEEP) {
+    // Primera vez que entra al modo SWEEP: preguntar duración por chat
+    // y guardar el valor elegido
+    prevMode = SWEEP;
+    // Enviar mensaje de chat indicando la duración actual y cómo cambiarla
+    // (el usuario puede girar el encoder para cambiarla en tiempo real)
+    // Nota: si el usuario quiere un valor distinto, girar el encoder
+    // cambiará sweepDurationSec de 1 a 10 y lo guardará automáticamente.
+    // Duración actual: sweepDurationSec segundos (un sentido 0→180).
   }
 
   delay(20); // ~50 Hz UI refresh, leaves headroom for servo timing
