@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Servo Tester Nivel 3 — Manual completo (ESP32-C3)</title>
+<style>
+  :root{
+    --bg:#f6f7fb; --bg-card:#ffffff; --bg-soft:#eef1f8;
+    --ink:#1c2433; --ink-soft:#55607a; --line:#dde2ee;
+    --brand:#4338ca; --brand-soft:#eef0ff;
+    --info:#2563eb; --info-bg:#e8f0fe;
+    --warn:#b45309; --warn-bg:#fef3e2;
+    --danger:#dc2626; --danger-bg:#fdecec;
+    --ok:#15803d; --ok-bg:#e7f6ec;
+    --code-bg:#0f172a; --code-ink:#e2e8f0;
+    --shadow:0 1px 3px rgba(16,24,40,.08),0 8px 24px rgba(16,24,40,.06);
+    --radius:14px;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    --s-33v:#e0892b; --s-gnd:#3a3f4b; --s-sda:#16a34a; --s-scl:#2563eb;
+    --s-servo:#a21caf; --s-enc:#0d9488; --s-vsense:#dc2626; --s-ina:#7c3aed;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.65;font-size:16px}
+  a{color:var(--brand);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.9em;background:var(--bg-soft);padding:.12em .4em;border-radius:6px;color:#be185d}
+  pre code{background:none;padding:0;color:inherit}
+  .hero{background:linear-gradient(135deg,#4338ca 0%,#6d28d9 55%,#2563eb 100%);color:#fff;padding:54px 24px 46px;position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;right:-80px;top:-80px;width:320px;height:320px;background:radial-gradient(circle,rgba(255,255,255,.18),transparent 70%)}
+  .hero .wrap{max-width:1180px;margin:0 auto;position:relative;z-index:1}
+  .hero h1{margin:0 0 8px;font-size:2.4rem;letter-spacing:-.02em;line-height:1.1}
+  .hero .tag{font-size:1.1rem;opacity:.95;max-width:760px}
+  .badges{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+  .badge{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);padding:6px 13px;border-radius:999px;font-size:.85rem;font-weight:500;backdrop-filter:blur(4px)}
+  .badge b{font-weight:700}
+  .hero .meta{margin-top:18px;font-size:.82rem;opacity:.85}
+  .layout{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:268px 1fr;gap:34px;padding:34px 24px 80px}
+  @media(max-width:980px){.layout{grid-template-columns:1fr;padding:20px 16px 60px}}
+  nav.toc{position:sticky;top:18px;align-self:start;background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 16px;box-shadow:var(--shadow);max-height:calc(100vh - 36px);overflow:auto}
+  @media(max-width:980px){nav.toc{position:static;max-height:none}}
+  nav.toc h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin:0 0 12px}
+  nav.toc ol{list-style:none;margin:0;padding:0;counter-reset:s}
+  nav.toc li{counter-increment:s;margin:0}
+  nav.toc a{display:flex;gap:9px;padding:6px 8px;border-radius:8px;color:var(--ink-soft);font-size:.9rem;border-left:3px solid transparent;transition:.15s}
+  nav.toc a::before{content:counter(s,decimal-leading-zero);font-family:var(--mono);font-size:.78rem;color:var(--brand);opacity:.7;min-width:22px}
+  nav.toc a:hover{background:var(--brand-soft);color:var(--ink);text-decoration:none}
+  nav.toc a.active{background:var(--brand-soft);color:var(--brand);border-left-color:var(--brand);font-weight:600}
+  nav.toc .sub{padding-left:14px}
+  main{min-width:0}
+  section{scroll-margin-top:18px;margin-bottom:34px}
+  section>h2{font-size:1.5rem;letter-spacing:-.01em;margin:0 0 6px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  section>h2 .num{font-family:var(--mono);font-size:1rem;color:#fff;background:var(--brand);border-radius:8px;padding:2px 9px;font-weight:700}
+  section>h2 small{font-weight:400;font-size:.95rem;color:var(--ink-soft)}
+  .card{background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;box-shadow:var(--shadow);margin-top:14px}
+  .card h3{margin:20px 0 8px;font-size:1.15rem}
+  .card h4{margin:16px 0 6px;font-size:1rem;color:var(--brand)}
+  .card h3:first-child,.card h4:first-child{margin-top:0}
+  p{margin:.6em 0}
+  ul,ol{margin:.5em 0;padding-left:1.4em}
+  li{margin:.3em 0}
+  .lead{color:var(--ink-soft)}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.92rem;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  thead th{background:var(--brand);color:#fff;text-align:left;padding:10px 12px;font-weight:600;font-size:.85rem}
+  tbody td{padding:9px 12px;border-top:1px solid var(--line);vertical-align:top}
+  tbody tr:nth-child(even){background:var(--bg-soft)}
+  caption{caption-side:top;text-align:left;font-weight:600;color:var(--ink-soft);font-size:.82rem;padding:0 0 6px;text-transform:uppercase;letter-spacing:.05em}
+  .tbl-min{width:auto}
+  .callout{border-left:5px solid;padding:14px 18px;border-radius:10px;margin:16px 0;background:var(--bg-card);box-shadow:var(--shadow)}
+  .callout .ic{font-weight:700;display:block;margin-bottom:4px;letter-spacing:.02em}
+  .callout.info{border-color:var(--info);background:var(--info-bg)}
+  .callout.info .ic{color:var(--info)}
+  .callout.warn{border-color:var(--warn);background:var(--warn-bg)}
+  .callout.warn .ic{color:var(--warn)}
+  .callout.danger{border-color:var(--danger);background:var(--danger-bg)}
+  .callout.danger .ic{color:var(--danger)}
+  .callout.ok{border-color:var(--ok);background:var(--ok-bg)}
+  .callout.ok .ic{color:var(--ok)}
+  .diag-wrap{background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-top:14px;overflow:auto}
+  .diag-wrap svg{max-width:100%;height:auto;display:block;margin:0 auto}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;font-size:.82rem}
+  .legend span{display:inline-flex;align-items:center;gap:7px;color:var(--ink-soft)}
+  .legend i{width:16px;height:4px;border-radius:2px;display:inline-block}
+  details.src{margin-top:14px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg-card);box-shadow:var(--shadow);overflow:hidden}
+  details.src>summary{cursor:pointer;padding:14px 18px;font-weight:600;background:var(--bg-soft);list-style:none;display:flex;justify-content:space-between;align-items:center}
+  details.src>summary::-webkit-details-marker{display:none}
+  details.src>summary::after{content:"▼ mostrar código";font-size:.82rem;font-weight:500;color:var(--brand)}
+  details.src[open]>summary::after{content:"▲ ocultar código"}
+  pre{background:var(--code-bg);color:var(--code-ink);padding:18px;overflow:auto;margin:0;font-family:var(--mono);font-size:.82rem;line-height:1.55;max-height:640px}
+  pre .c{color:#7f8ea3} pre .k{color:#93c5fd} pre .s{color:#fca5a5} pre .p{color:#c4b5fd} pre .n{color:#fcd34d} pre .f{color:#86efac}
+  .cmd{background:var(--code-bg);color:#a5f3fc;font-family:var(--mono);padding:12px 16px;border-radius:10px;overflow:auto;font-size:.85rem;margin:10px 0;white-space:pre-wrap}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.74rem;font-weight:600}
+  .pill.info{background:var(--info-bg);color:var(--info)} .pill.warn{background:var(--warn-bg);color:var(--warn)}
+  .pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.danger{background:var(--danger-bg);color:var(--danger)}
+  footer{border-top:1px solid var(--line);margin-top:40px;padding-top:22px;color:var(--ink-soft);font-size:.85rem;text-align:center}
+  @media(max-width:680px){.grid2{grid-template-columns:1fr}}
+  .kbd{font-family:var(--mono);background:#0f172a;color:#e2e8f0;padding:1px 7px;border-radius:5px;font-size:.82rem}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Servo Tester Nivel 3</h1>
+    <p class="tag">Probador, analizador y controlador <b>multicanal (4 servos)</b> con <b>BLE</b> y <b>gráfico de respuesta</b>, basado en el ESP32-C3. El manual definitivo.</p>
+    <div class="badges">
+      <span class="badge"><b>Nivel:</b> 3</span>
+      <span class="badge"><b>MCU:</b> ESP32-C3 Super Mini / DevKitM-1</span>
+      <span class="badge"><b>Framework:</b> Arduino + PlatformIO</span>
+      <span class="badge"><b>Flash usada:</b> ~80.9%</span>
+      <span class="badge"><b>Conectividad:</b> BLE (NimBLE)</span>
+      <span class="badge"><b>Canales:</b> 4 servos</span>
+      <span class="badge"><b>Librerías:</b> SSD1306 · GFX · ESP32Servo · INA219</span>
+    </div>
+    <div class="meta">Manual auto-contenido · Idioma: Español · Código fuente: <code>src/main.cpp</code> · Lee toda la teoría antes de soldar.</div>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="toc">
+    <h2>Índice</h2>
+    <ol>
+      <li><a href="#intro">Introducción</a></li>
+      <li><a href="#materiales">Lista de materiales</a></li>
+      <li><a href="#teoria">Teoría (N1+N2+N3)</a>
+        <ol class="sub">
+          <li><a href="#t-servo">Servo &amp; PWM</a></li>
+          <li><a href="#t-ledc">LEDC y 3.3 V</a></li>
+          <li><a href="#t-fuente">Fuente 5 V</a></li>
+          <li><a href="#t-encoder">Encoder cuadratura</a></li>
+          <li><a href="#t-divisor">Divisor de tensión</a></li>
+          <li><a href="#t-ina">INA219</a></li>
+          <li><a href="#t-ble">BLE / NimBLE</a></li>
+          <li><a href="#t-ring">Ring buffer</a></li>
+          <li><a href="#t-canales">¿Por qué 4 canales?</a></li>
+        </ol>
+      </li>
+      <li><a href="#pinout">Pinout completo</a></li>
+      <li><a href="#diagrama">Diagrama de conexión</a></li>
+      <li><a href="#modos">Modos y multicanal</a></li>
+      <li><a href="#ble">Sección BLE</a></li>
+      <li><a href="#grafico">Gráfico de respuesta</a></li>
+      <li><a href="#analizador">Analizador V/I</a></li>
+      <li><a href="#codigo">Recorrido del código</a></li>
+      <li><a href="#fuente">Código fuente completo</a></li>
+      <li><a href="#calibracion">Calibración</a></li>
+      <li><a href="#trouble">Solución de problemas</a></li>
+      <li><a href="#seguridad">Seguridad / USB-CDC</a></li>
+      <li><a href="#compilar">Compilar y subir</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ol>
+  </nav>
+
+  <main>
+  <!-- 1. INTRO -->
+  <section id="intro">
+    <h2><span class="num">01</span> Introducción <small>qué es y qué añade el Nivel 3</small></h2>
+    <div class="card">
+      <p>El <b>Servo Tester Nivel 3</b> es un <b>probador, analizador y controlador multicanal de servos de hobby</b> construido sobre el microcontrolador <b>ESP32-C3</b>. Es la evolución de los niveles anteriores: conserva todo lo del Nivel 2 (menú, modo manual, barrido, centro, ajustes, analizador de tensión/corriente con INA219, alarma y persistencia con Preferences) y añade tres funciones <b>premium</b>:</p>
+      <ol>
+        <li><b>Multicanal:</b> controla <b>4 servos</b> (CH1…CH4). Solo un canal <b>activo</b> recibe los comandos MANUAL/SWEEP/CENTER; los otros 3 <b>mantienen su última posición</b>.</li>
+        <li><b>BLE:</b> servidor Bluetooth Low Energy llamado <code>"ServoTester"</code> (NimBLE, integrado en el core de Arduino-ESP32). Expone telemetría (read+notify) y una característica de escritura para comandarlo desde el móvil.</li>
+        <li><b>Gráfico de respuesta:</b> un <i>buffer circular</i> de las últimas ~64 muestras del ángulo del canal activo, dibujado como gráfica de línea en la OLED para visualizar overshoot, rebote o jitter.</li>
+      </ol>
+      <p class="lead">Todo el control local se hace con un encoder rotatorio (HW-040). Los servos se alimentan <b>siempre</b> desde una fuente externa de 5 V con <b>masa (GND) común</b> con la placa. La lógica de la placa y del encoder es de 3.3 V.</p>
+      <div class="callout info"><span class="ic">💡 CONCEPTO</span>
+        Un "servo tester" es una herramienta de banco: te sirve para <b>verificar que un servo funciona</b>, <b>medir cuánta corriente consume</b>, <b>encontrar sus límites reales</b> (min/max µs) y <b>comparar la respuesta mecánica</b> de distintos modelos sin montarlos en un robot.</div>
+    </div>
+  </section>
+
+  <!-- 2. MATERIALES -->
+  <section id="materiales">
+    <h2><span class="num">02</span> Lista de materiales (BOM)</h2>
+    <div class="card">
+      <table>
+        <caption>Componentes necesarios</caption>
+        <thead><tr><th>Cantidad</th><th>Componente</th><th>Notas / especificación</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>ESP32-C3 (Super Mini o DevKitM-1)</td><td>Placa de desarrollo C3, 4 MB flash (RISC-V 32-bit).</td></tr>
+          <tr><td>1</td><td>Pantalla OLED SSD1306 128×64 I²C</td><td>Dirección <code>0x3C</code>. Pista 0.96".</td></tr>
+          <tr><td>4</td><td>Servos de hobby (estándar, 50 Hz)</td><td>p. ej. SG90, MG996R, MG90S (CH1…CH4).</td></tr>
+          <tr><td>1</td><td>Encoder rotatorio HW-040 (KY-040)</td><td>Salidas CLK / DT / SW (cuadratura + pulsador).</td></tr>
+          <tr><td>1</td><td>Sensor de corriente INA219</td><td>I²C, dirección <code>0x40</code>, en <b>serie</b> con el 5 V.</td></tr>
+          <tr><td>2</td><td>Resistencia 10 kΩ</td><td>Para el divisor de tensión (10k/10k).</td></tr>
+          <tr><td>1</td><td>Zumbador piezoeléctrico (activo a nivel alto)</td><td>GPIO8 (también el LED onboard).</td></tr>
+          <tr><td>1</td><td>Fuente de 5 V externa para los servos</td><td>≥2 A recomendado (el INA219 la mide).</td></tr>
+          <tr><td>–</td><td>Cables Dupont, protoboard</td><td>Para el montaje.</td></tr>
+          <tr><td>–</td><td>Cable USB-C (datos)</td><td>Para programar la placa (esptool por USB nativo).</td></tr>
+          <tr><td>–</td><td>Polímetro</td><td>Para calibrar el divisor de tensión (<code>vCal</code>).</td></tr>
+        </tbody>
+      </table>
+      <div class="callout warn"><span class="ic">⚠️ POTENCIA</span>
+        Cuatro servos estándar pueden pedir <b>1–2 A en conjunto</b> al arrancar o ante carga. Usa una fuente de al menos <b>2 A</b>; una fuente débil provoca tirones (jitter) y falsas alarmas de tensión.</div>
+    </div>
+  </section>
+
+  <!-- 3. TEORÍA -->
+  <section id="teoria">
+    <h2><span class="num">03</span> Teoría <small>todo lo de N1 + N2 + los fundamentos nuevos de N3</small></h2>
+    <div class="card">
+      <h3 id="t-servo">3.1 Servo de hobby y PWM</h3>
+      <p>Un servo de hobby es un motor de corriente continua + caja de engranajes + potenciómetro de realimentación + controlador en un mismo paquete. Se controla por <b>PWM de pulsos anchos</b> (no por ciclo de trabajo continuo como un LED):</p>
+      <ul>
+        <li>Cada <b>20 ms (50 Hz)</b> recibe un pulso.</li>
+        <li>La <b>duración del pulso</b> codifica la posición: típicamente <b>1000 µs = 0°</b> … <b>1500 µs = centro</b> … <b>2000 µs = 180°</b>. El firmware usa <code>minUs/maxUs</code> ajustables (por defecto 500…2500 µs).</li>
+        <li>El controlador interno compara el pulso con la posición medida y mueve el motor hasta igualarlas.</li>
+      </ul>
+      <div class="callout info"><span class="ic">📐 RANGO</span>
+        El rango de pulsos <b>no es estándar</b>: un SG90 barato puede ir de 500 a 2400 µs, mientras que un servo de rotación continua ignora el ángulo. Por eso el Nivel 3 expone <code>minUs</code> y <code>maxUs</code> en SETTINGS.</div>
+
+      <h3 id="t-ledc">3.2 LEDC y el nivel lógico de 3.3 V</h3>
+      <p>El ESP32 no genera PWM con <code>analogWrite</code> como un Arduino UNO; usa el periférico <b>LEDC</b> (LED Control). La librería <code>ESP32Servo</code> reserva <b>canales LEDC</b> y configura un timer a 50 Hz para producir los pulsos de servo de forma <b>no bloqueante</b> (hardware, sin interrumpir el <code>loop()</code>).</p>
+      <p>El ESP32-C3 es un chip de <b>lógica 3.3 V</b>. Sus pines GPIO <b>toleran solo 3.3 V</b> (nunca 5 V). Por eso la señal de control del servo sale a 3.3 V —que es perfectamente válida para el pin de señal de un servo, porque este solo "escucha" el flanco del pulso y no necesita 5 V en su línea de control. Lo que necesita 5 V es la <b>alimentación</b> del servo, no su señal.</p>
+
+      <h3 id="t-fuente">3.3 La fuente de 5 V externa</h3>
+      <p>Un servo típico quema entre decenas y cientos de mA; cuatro a la vez, varios amperios. El pin <b>5V / VBUS</b> del ESP32-C3 no puede entregar eso de forma fiable (y además lo estaríamos pasando por la placa). Por eso los servos se alimentan de una <b>fuente externa de 5 V</b>, conectada en paralelo a todos ellos y con <b>GND común</b> a la placa. La placa ESP32 solo aporta la <b>señal de control</b> (3.3 V) y la <b>lógica 3.3 V</b>.</p>
+
+      <h3 id="t-encoder">3.4 Encoder de cuadratura (HW-040)</h3>
+      <p>El HW-040 es un encoder rotatorio incremental de <b>cuadratura</b>: dos salidas desfasadas 90° (<b>CLK</b> y <b>DT</b>). Al girar, los flancos permiten deducir <b>dirección</b> (CW/CCW) y <b>pasos</b> (detents). Además trae un pulsador (<b>SW</b>).</p>
+      <ul>
+        <li>El firmware usa <b>interrupción en CLK</b> (<code>CHANGE</code>) con anti-rebote de 5 ms.</li>
+        <li>Cuando CLK sube, compara DT: si DT está LOW → +1 (horario); si HIGH → −1 (antihorario).</li>
+        <li>El pulsador se <b>sondea en el loop</b> para distinguir pulsación <b>corta</b> (acción) de <b>larga</b> (cambio de canal, 700 ms).</li>
+      </ul>
+
+      <h3 id="t-divisor">3.5 Divisor de tensión para V-sense</h3>
+      <p>El servo se alimenta a 5 V, pero el ADC del ESP32 solo admite hasta 3.3 V. Se usa un <b>divisor resistivo 10k/10k</b> desde el rail de 5 V hasta GND; el punto medio entrega la <b>mitad</b> de la tensión, que se lee en GPIO3 (ADC). La fórmula en código es:</p>
+      <p class="cmd">V_servo = adc_raw × (3.3 / 4095) × 2.0 × vCal</p>
+      <p>El factor <code>× 2.0</code> deshace la mitad del divisor y <code>vCal</code> corrige el pequeño offset provocado por el pull-up del chip USB-UART en GPIO3 (ver §seguridad).</p>
+
+      <h3 id="t-ina">3.6 INA219 (analizador de tensión y corriente)</h3>
+      <p>El INA219 es un <b>monitor de potencia</b> I²C que mide mediante un <b>shunt</b> la corriente y, por división resistiva interna, la tensión de bus. Se coloca <b>en serie</b> con el positivo de los servos:</p>
+      <ul>
+        <li><b>VIN+</b> recibe la fuente de 5 V.</li>
+        <li><b>VIN−</b> alimenta a los servos.</li>
+        <li>La masa (GND) de la fuente, del INA219 y de la placa <b>deben unirse</b>.</li>
+      </ul>
+      <p>El firmware usa <code>setCalibration_32V_2A()</code>, por lo que el rango es hasta 32 V y 2 A (la tensión de bus medida aquí es la del rail de servos). Entrega <code>busV</code> y <code>current_mA</code>, de donde se deriva la potencia <code>W = busV × I/1000</code>.</p>
+
+      <h3 id="t-ble">3.7 BLE / NimBLE en ESP32 (la base del Nivel 3)</h3>
+      <p>Bluetooth Low Energy organiza la comunicación en torno a <b>GATT</b> (Generic Attribute Profile). Los conceptos clave:</p>
+      <ul>
+        <li><b>Periférico (Peripheral / Server):</b> nuestro ESP32 se anuncia y expone un conjunto de servicios. Actúa como <i>servidor de GATT</i>.</li>
+        <li><b>Central (Client):</b> el móvil (nRF Connect) escanea, se conecta y lee/escribe.</li>
+        <li><b>Service:</b> agrupa funcionalidad, identificado por un <b>UUID</b> de 128 bits.</li>
+        <li><b>Characteristic:</b> dentro de un servicio, es el dato real. Tiene <b>propiedades</b>: <code>READ</code> (leer), <code>NOTIFY</code> (empuja datos sin confirmación), <code>WRITE</code> (recibir comandos).</li>
+        <li><b>Advertising:</b> el periférico emite paquetes para ser detectado. La librería NimBLE del core de Arduino-ESP32 <b>ya incluye BLE</b> — no se añade ninguna librería.</li>
+      </ul>
+      <div class="callout info"><span class="ic">🔗 FLUJO</span>
+        App/central → <b>CONNECT</b> → descubre <b>Service UUID</b> → abre <b>Characteristic</b> → <code>READ/NOTIFY</code> para telemetría o <code>WRITE</code> para comandos. Al desconectar, el ESP32 <b>reanuda el advertising</b> automáticamente.</div>
+
+      <h3 id="t-ring">3.8 Ring buffer y el gráfico de respuesta</h3>
+      <p>Un <b>buffer circular (ring buffer)</b> es un array de tamaño fijo donde, al llenarse, las nuevas muestras <b>sobrescriben las más antiguas</b>. El firmware guarda en <code>graphBuf[64]</code> el ángulo del canal activo en cada frame (~50 Hz). Con un puntero <code>graphHead</code> se sabe dónde escribir y se dibuja de más antiguo (izquierda) a más nuevo (derecha).</p>
+      <p>Esto permite ver la <b>dinámica mecánica</b> del servo:</p>
+      <ul>
+        <li><b>Overshoot / rebote:</b> el trazo sube de la consigna y vuelve (típico de SG90 baratos).</li>
+        <li><b>Jitter:</b> temblor alrededor del valor por alimentación débil o carga.</li>
+        <li><b>Settling time:</b> cuánto tarda en estabilizarse tras un cambio de ángulo.</li>
+      </ul>
+
+      <h3 id="t-canales">3.9 ¿Por qué 4 canales? Pines y notas de strapping</h3>
+      <p>ESP32Servo puede reservar hasta <b>6 canales LEDC</b> en el C3; el firmware usa 4:</p>
+      <table class="tbl-min">
+        <thead><tr><th>Canal</th><th>GPIO</th><th>Nota</th></tr></thead>
+        <tbody>
+          <tr><td>CH1</td><td>GPIO10</td><td>Señal servo 1 (naranja/amarillo).</td></tr>
+          <tr><td>CH2</td><td>GPIO1</td><td>Es el <b>TX de UART0</b> (no usado por USB → libre como salida).</td></tr>
+          <tr><td>CH3</td><td>GPIO2</td><td><b>Strapping pin</b> (configura voltaje de flash en boot). Seguro como <b>salida de servo tras el arranque</b>; el firmware no lo fuerza antes de <code>setup()</code>.</td></tr>
+          <tr><td>CH4</td><td>GPIO21</td><td>Antes era buzzer en L2; ahora servo.</td></tr>
+        </tbody>
+      </table>
+      <div class="callout warn"><span class="ic">⚠️ GPIO2</span>
+        GPIO2 es <i>strapping</i>: define el voltaje de la flash al arrancar. <b>Nunca lo fuerces a un nivel concreto antes del boot</b>. El firmware solo lo usa como salida de servo <b>después</b> de iniciar, lo cual es seguro.</div>
+    </div>
+  </section>
+  <!-- 4. PINOUT -->
+  <section id="pinout">
+    <h2><span class="num">04</span> Pinout completo</h2>
+    <div class="card">
+      <table>
+        <caption>Señal → GPIO → destino (colores = señal lógica)</caption>
+        <thead><tr><th>Señal</th><th>GPIO</th><th>Destino / función</th><th>Color</th></tr></thead>
+        <tbody>
+          <tr><td>OLED SDA</td><td>6</td><td>SDA de la OLED (y del INA219)</td><td><span class="pill ok">SDA</span></td></tr>
+          <tr><td>OLED SCL</td><td>7</td><td>SCL de la OLED (y del INA219)</td><td><span class="pill info">SCL</span></td></tr>
+          <tr><td>Encoder CLK</td><td>4</td><td>CLK del HW-040 (interrupción)</td><td><span class="pill" style="background:#e0f2f1;color:#0d9488">ENC</span></td></tr>
+          <tr><td>Encoder DT</td><td>5</td><td>DT del HW-040</td><td><span class="pill" style="background:#e0f2f1;color:#0d9488">ENC</span></td></tr>
+          <tr><td>Encoder SW</td><td>20</td><td>Pulsador del HW-040</td><td><span class="pill" style="background:#e0f2f1;color:#0d9488">ENC</span></td></tr>
+          <tr><td>V-sense</td><td>3</td><td>Punto medio del divisor 10k/10k (desde 5 V)</td><td><span class="pill danger">V-sense</span></td></tr>
+          <tr><td>Buzzer</td><td>8</td><td>Zumbador piezo (activo a nivel alto) — también LED onboard</td><td><span class="pill warn">BUZZ</span></td></tr>
+          <tr><td>Servo CH1</td><td>10</td><td>Señal servo 1</td><td><span class="pill" style="background:#faf0fd;color:#a21caf">SERVO</span></td></tr>
+          <tr><td>Servo CH2</td><td>1</td><td>Señal servo 2 (antes TX UART0)</td><td><span class="pill" style="background:#faf0fd;color:#a21caf">SERVO</span></td></tr>
+          <tr><td>Servo CH3</td><td>2</td><td>Señal servo 3 (strapping, ok como salida)</td><td><span class="pill" style="background:#faf0fd;color:#a21caf">SERVO</span></td></tr>
+          <tr><td>Servo CH4</td><td>21</td><td>Señal servo 4</td><td><span class="pill" style="background:#faf0fd;color:#a21caf">SERVO</span></td></tr>
+          <tr><td>GND</td><td>GND</td><td>Masa común (OLED, encoder, INA219, 4 servos, fuente 5 V)</td><td><span class="pill" style="background:#e5e7eb;color:#374151">GND</span></td></tr>
+          <tr><td>3V3</td><td>3V3</td><td>VCC de la OLED y del encoder (lógica 3.3 V)</td><td><span class="pill" style="background:#fef3c7;color:#b45309">3.3V</span></td></tr>
+          <tr><td>5V ext.</td><td>–</td><td>Entra al <b>VIN+</b> del INA219 (luego VIN− alimenta servos)</td><td><span class="pill" style="background:#ede9fe;color:#7c3aed">INA</span></td></tr>
+        </tbody>
+      </table>
+      <div class="callout info"><span class="ic">📌 I²C compartido</span>
+        OLED (0x3C) e INA219 (0x40) viven en el <b>mismo bus I²C</b> (GPIO6/7). No hay conflicto porque sus direcciones son distintas.</div>
+    </div>
+  </section>
+
+  <!-- 5. DIAGRAMA -->
+  <section id="diagrama">
+    <h2><span class="num">05</span> Diagrama de conexión visual</h2>
+    <div class="card">
+      <div class="diag-wrap">
+        <svg viewBox="0 0 920 600" role="img" aria-label="Diagrama de conexión del Servo Tester Nivel 3">
+          <defs>
+            <marker id="arw" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#334155"/></marker>
+            <style>
+              .bx{fill:#fff;stroke:#334155;stroke-width:2}
+              .ttl{font-family:system-ui;font-size:13px;font-weight:700;fill:#0f172a}
+              .pin{font-family:ui-monospace,monospace;font-size:9px;fill:#475569}
+            </style>
+          </defs>
+
+          <!-- ESP32 -->
+          <rect class="bx" x="330" y="240" width="220" height="150" rx="14"/>
+          <text class="ttl" x="440" y="262" text-anchor="middle">ESP32-C3</text>
+          <text class="pin" x="345" y="288">6 SDA</text>
+          <text class="pin" x="345" y="306">7 SCL</text>
+          <text class="pin" x="345" y="324">4 CLK</text>
+          <text class="pin" x="345" y="342">5 DT</text>
+          <text class="pin" x="345" y="360">20 SW</text>
+          <text class="pin" x="345" y="378">3 Vsense</text>
+          <text class="pin" x="520" y="288">10 CH1</text>
+          <text class="pin" x="520" y="306">1  CH2</text>
+          <text class="pin" x="520" y="324">2  CH3</text>
+          <text class="pin" x="520" y="342">21 CH4</text>
+          <text class="pin" x="520" y="360">8  BUZZ</text>
+          <text class="pin" x="520" y="378">3V3 GND</text>
+
+          <!-- OLED -->
+          <rect class="bx" x="640" y="40" width="180" height="90" rx="10"/>
+          <text class="ttl" x="730" y="62" text-anchor="middle">OLED SSD1306</text>
+          <text class="pin" x="655" y="88">SDA 0x3C</text>
+          <text class="pin" x="655" y="104">SCL</text>
+          <text class="pin" x="655" y="120">3V3 / GND</text>
+          <line x1="640" y1="78" x2="552" y2="295" stroke="#16a34a" stroke-width="3" marker-end="url(#arw)"/>
+          <line x1="640" y1="96" x2="552" y2="313" stroke="#2563eb" stroke-width="3" marker-end="url(#arw)"/>
+          <line x1="730" y1="130" x2="730" y2="160" stroke="#e0892b" stroke-width="3" marker-end="url(#arw)"/>
+          <line x1="700" y1="130" x2="700" y2="170" stroke="#3a3f4b" stroke-width="3" marker-end="url(#arw)"/>
+
+          <!-- Encoder -->
+          <rect class="bx" x="640" y="200" width="180" height="90" rx="10"/>
+          <text class="ttl" x="730" y="222" text-anchor="middle">Encoder HW-040</text>
+          <text class="pin" x="655" y="248">CLK</text>
+          <text class="pin" x="655" y="264">DT</text>
+          <text class="pin" x="655" y="280">SW</text>
+          <text class="pin" x="655" y="296">3V3 / GND</text>
+          <line x1="640" y1="238" x2="552" y2="331" stroke="#0d9488" stroke-width="3" marker-end="url(#arw)"/>
+          <line x1="640" y1="256" x2="552" y2="349" stroke="#0d9488" stroke-width="3" marker-end="url(#arw)"/>
+          <line x1="640" y1="274" x2="552" y2="367" stroke="#0d9488" stroke-width="3" marker-end="url(#arw)"/>
+          <line x1="730" y1="290" x2="730" y2="320" stroke="#e0892b" stroke-width="3" marker-end="url(#arw)"/>
+          <line x1="700" y1="290" x2="700" y2="330" stroke="#3a3f4b" stroke-width="3" marker-end="url(#arw)"/>
+
+          <!-- Servos -->
+          <g>
+            <rect class="bx" x="700" y="380" width="170" height="60" rx="10"/>
+            <text class="ttl" x="785" y="400" text-anchor="middle">Servo CH1</text>
+            <text class="pin" x="712" y="424">GPIO10 · GND · +5V</text>
+            <line x1="700" y1="398" x2="552" y2="293" stroke="#a21caf" stroke-width="3" marker-end="url(#arw)"/>
+
+            <rect class="bx" x="700" y="450" width="170" height="60" rx="10"/>
+            <text class="ttl" x="785" y="470" text-anchor="middle">Servo CH2</text>
+            <text class="pin" x="712" y="494">GPIO1 · GND · +5V</text>
+            <line x1="700" y1="468" x2="552" y2="311" stroke="#a21caf" stroke-width="3" marker-end="url(#arw)"/>
+
+            <rect class="bx" x="510" y="500" width="170" height="60" rx="10"/>
+            <text class="ttl" x="595" y="520" text-anchor="middle">Servo CH3</text>
+            <text class="pin" x="522" y="544">GPIO2 · GND · +5V</text>
+            <line x1="510" y1="518" x2="552" y2="329" stroke="#a21caf" stroke-width="3" marker-end="url(#arw)"/>
+
+            <rect class="bx" x="320" y="500" width="170" height="60" rx="10"/>
+            <text class="ttl" x="405" y="520" text-anchor="middle">Servo CH4</text>
+            <text class="pin" x="332" y="544">GPIO21 · GND · +5V</text>
+            <line x1="490" y1="518" x2="552" y2="347" stroke="#a21caf" stroke-width="3" marker-end="url(#arw)"/>
+          </g>
+
+          <!-- Buzzer -->
+          <rect class="bx" x="330" y="120" width="150" height="60" rx="10"/>
+          <text class="ttl" x="405" y="140" text-anchor="middle">Buzzer</text>
+          <text class="pin" x="345" y="164">GPIO8 (activo HIGH)</text>
+          <line x1="480" y1="150" x2="552" y2="355" stroke="#b45309" stroke-width="3" marker-end="url(#arw)"/>
+
+          <!-- Divisor -->
+          <rect class="bx" x="40" y="330" width="180" height="70" rx="10"/>
+          <text class="ttl" x="130" y="352" text-anchor="middle">Divisor 10k/10k</text>
+          <text class="pin" x="55" y="374">mitad del 5V</text>
+          <text class="pin" x="55" y="390">→ GPIO3 (Vsense)</text>
+          <line x1="220" y1="360" x2="352" y2="372" stroke="#dc2626" stroke-width="3" marker-end="url(#arw)"/>
+
+          <!-- INA219 -->
+          <rect class="bx" x="40" y="140" width="190" height="110" rx="10"/>
+          <text class="ttl" x="135" y="162" text-anchor="middle">INA219 (0x40)</text>
+          <text class="pin" x="55" y="186">VIN+ &lt;-- 5V fuente</text>
+          <text class="pin" x="55" y="204">VIN- --&gt; servos</text>
+          <text class="pin" x="55" y="222">SDA/SCL --&gt; GPIO6/7</text>
+          <text class="pin" x="55" y="240">GND común</text>
+          <line x1="230" y1="220" x2="552" y2="290" stroke="#16a34a" stroke-width="3" marker-end="url(#arw)"/>
+          <line x1="230" y1="236" x2="552" y2="308" stroke="#2563eb" stroke-width="3" marker-end="url(#arw)"/>
+
+          <!-- Fuente 5V -->
+          <rect class="bx" x="40" y="20" width="190" height="80" rx="10" style="stroke:#7c3aed"/>
+          <text class="ttl" x="135" y="46" text-anchor="middle">Fuente 5 V</text>
+          <text class="ttl" x="135" y="68" text-anchor="middle" style="font-size:18px">≥2 A</text>
+          <text class="pin" x="55" y="90">+5V → INA219 VIN+</text>
+          <line x1="135" y1="100" x2="135" y2="138" stroke="#7c3aed" stroke-width="4" marker-end="url(#arw)"/>
+          <line x1="160" y1="120" x2="200" y2="360" stroke="#dc2626" stroke-width="2" stroke-dasharray="4 3"/>
+
+          <text class="pin" x="600" y="585" fill="#94a3b8">Nota: todos los GND (placa, OLED, encoder, INA219, 4 servos, fuente) UNIDOS. INA219 en SERIE con el +5V de los servos.</text>
+        </svg>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--s-33v)"></i> 3.3 V (lógica)</span>
+        <span><i style="background:var(--s-gnd)"></i> GND (masa común)</span>
+        <span><i style="background:var(--s-sda)"></i> SDA (I²C)</span>
+        <span><i style="background:var(--s-scl)"></i> SCL (I²C)</span>
+        <span><i style="background:var(--s-servo)"></i> Señal servo (CH1-4)</span>
+        <span><i style="background:var(--s-enc)"></i> CLK/DT/SW encoder</span>
+        <span><i style="background:var(--s-vsense)"></i> Línea V-sense (divisor)</span>
+        <span><i style="background:var(--s-ina)"></i> INA219 en serie (5V)</span>
+        <span><i style="background:var(--warn)"></i> Buzzer (GPIO8)</span>
+      </div>
+      <div class="callout ok"><span class="ic">✅ MASA COMÚN</span>
+        El GND de la placa, OLED, encoder, INA219, los 4 servos y la fuente de 5 V <b>deben estar unidos</b>. El INA219 va <b>en serie</b> con el positivo de los servos, no en paralelo.</div>
+    </div>
+  </section>
+
+  <!-- 6. MODOS -->
+  <section id="modos">
+    <h2><span class="num">06</span> Modos y multicanal</h2>
+    <div class="card">
+      <p>Al arrancar se muestra el <b>MENU</b>. Girar el encoder mueve el cursor; pulsar SW entra en la opción. En cualquier submodo (salvo SETTINGS), <b>pulsar SW corto vuelve al MENU</b>.</p>
+      <table>
+        <thead><tr><th>Modo (menú)</th><th>Qué hace</th></tr></thead>
+        <tbody>
+          <tr><td><b>MANUAL</b></td><td>El canal activo ajusta su ángulo ±1°/detent dentro de [0,180]; se mueve en vivo. Muestra el <b>gráfico de respuesta</b> abajo.</td></tr>
+          <tr><td><b>SWEEP</b></td><td>El canal activo oscila 0°↔180°, ~1.5 s por dirección.</td></tr>
+          <tr><td><b>CENTER</b></td><td>El canal activo se mantiene en el ángulo central (por defecto 90° = 1500 µs).</td></tr>
+          <tr><td><b>CANAL</b></td><td>Cambia el <b>canal activo</b> (CH1→CH2→CH3→CH4→CH1) y vuelve al MENU.</td></tr>
+          <tr><td><b>GRAFICO</b></td><td>Pantalla completa del gráfico de respuesta del canal activo.</td></tr>
+          <tr><td><b>SETTINGS</b></td><td>Configura <code>minUs</code>, <code>maxUs</code>, <code>center</code> y <code>iThresh</code>; se guarda con Preferences.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>6.1 Multicanal</h3>
+      <ul>
+        <li>Hay <b>4 servos</b> conectados y <b>uno activo</b> a la vez (<code>CH</code> en la OLED y en la telemetría BLE).</li>
+        <li>Los comandos MANUAL/SWEEP/CENTER solo afectan al <b>canal activo</b>. Los otros 3 <b>mantienen su última posición</b> (ESP32Servo sigue generando el pulso que se les envió).</li>
+        <li>Cambias de canal con la opción <b>CANAL</b> del menú, o con <b>pulsación LARGA</b> (≈0.7 s) del encoder en cualquier modo (excepto SETTINGS).</li>
+        <li>Cada canal recuerda su ángulo de forma independiente; al volver a un canal, retoma su última posición.</li>
+      </ul>
+
+      <h3>6.2 La pantalla</h3>
+      <ul>
+        <li><b>MENU:</b> lista de opciones y, arriba a la derecha, el <b>canal activo</b> (CH1…CH4); abajo la línea <code>V:/I:</code>.</li>
+        <li><b>MANUAL:</b> cabecera <code>CHx MANUAL</code>, línea <code>V: x.xx I: nnnmA</code>, ángulo grande, pulso µs y <b>gráfico de respuesta</b> (tira inferior).</li>
+        <li><b>SWEEP / CENTER:</b> cabecera <code>CHx …</code>, ángulo grande, pulso µs, <code>V:/I:</code> y gauge.</li>
+        <li><b>GRAFICO:</b> cabecera <code>RESPUESTA CHx</code> y gráfica a pantalla completa.</li>
+        <li><b>SETTINGS:</b> campos editables. Si hay alarma, la OLED marca <b>"ALARMA"</b> arriba a la derecha.</li>
+      </ul>
+
+      <h3>6.3 Telemetría V/I y gráfico en el OLED</h3>
+      <p>En todos los modos el firmware muestrea continuamente la tensión del servo (divisor) y la corriente (INA219), actualiza la alarma/buzzer y empuja el ángulo del canal activo al <i>ring buffer</i> del gráfico. La telemetría se construye como CSV y se notifica por BLE cada ~250 ms (ver §7).</p>
+    </div>
+  </section>
+  <!-- 7. BLE -->
+  <section id="ble">
+    <h2><span class="num">07</span> Sección BLE (NimBLE integrado)</h2>
+    <div class="card">
+      <p>El core de Arduino-ESP32 <b>incluye BLE (NimBLE) de fábrica</b>; no se añade ninguna librería. El dispositivo se anuncia como <b>"ServoTester"</b>.</p>
+
+      <h3>7.1 UUIDs del servicio y las características</h3>
+      <table>
+        <thead><tr><th>Elemento</th><th>UUID</th></tr></thead>
+        <tbody>
+          <tr><td>Servicio</td><td><code>4fafc201-1fb5-459e-8fcc-c5c9c331914b</code></td></tr>
+          <tr><td>Telemetría (read + notify)</td><td><code>beb5483e-36e1-4688-b7f0-0000000000a1</code></td></tr>
+          <tr><td>Escritura (comandos)</td><td><code>beb5483e-36e1-4688-b7f0-0000000000a2</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>7.2 Característica de telemetría (READ + NOTIFY)</h3>
+      <p>Cada ~250 ms (y al conectar) se envía una cadena CSV, p. ej.:</p>
+      <p class="cmd">CH:1,MODE:MANUAL,ANG:90,PULSE:1500,V:5.01,I:120</p>
+      <table>
+        <thead><tr><th>Campo</th><th>Significado</th></tr></thead>
+        <tbody>
+          <tr><td><code>CH</code></td><td>Canal activo (1…4)</td></tr>
+          <tr><td><code>MODE</code></td><td>MENU / MANUAL / SWEEP / CENTER / GRAFICO / SETTINGS</td></tr>
+          <tr><td><code>ANG</code></td><td>Ángulo del canal activo (0…180)</td></tr>
+          <tr><td><code>PULSE</code></td><td>Ancho de pulso en µs (<code>angleToUs(ANG)</code>)</td></tr>
+          <tr><td><code>V</code></td><td>Tensión de alimentación del servo (divisor), en V</td></tr>
+          <tr><td><code>I</code></td><td>Corriente del bus (INA219), en mA</td></tr>
+        </tbody>
+      </table>
+      <p>Suscríbete (notify) para recibirla en vivo; también puedes leerla bajo demanda.</p>
+
+      <h3>7.3 Característica de escritura (comandos desde el móvil)</h3>
+      <p>Acepta <b>una o varias</b> claves separadas por <code>,</code>, <code>;</code> o espacio, en formato <code>clave:valor</code> o <code>clave=valor</code> (mayús/minús indistinto):</p>
+      <table>
+        <thead><tr><th>Clave</th><th>Valores</th><th>Efecto</th></tr></thead>
+        <tbody>
+          <tr><td><code>ch</code> / <code>channel</code></td><td>1…4</td><td>Canal activo</td></tr>
+          <tr><td><code>mode</code></td><td><code>manual</code> / <code>sweep</code> / <code>center</code> (o <code>m</code>/<code>s</code>/<code>c</code>)</td><td>Modo</td></tr>
+          <tr><td><code>angle</code> / <code>a</code></td><td>0…180</td><td>Ángulo objetivo (en modo MANUAL)</td></tr>
+        </tbody>
+      </table>
+      <p>Ejemplos (pega uno en el campo de escritura de nRF Connect):</p>
+      <p class="cmd">ch:2
+mode:sweep
+angle:120
+ch:3,mode:center
+ch:1,mode:manual,angle:45</p>
+      <div class="callout info"><span class="ic">🧠 ORDEN</span>
+        Si escribes <code>mode:manual</code> y luego <code>angle:120</code>, el canal activo se moverá al ángulo indicado. Si cambias de canal, los demás mantienen su posición.</div>
+
+      <h3>7.4 Paso a paso con nRF Connect</h3>
+      <ol>
+        <li>Instala <b>nRF Connect for Mobile</b> (Android/iOS).</li>
+        <li>Escanea y toca <b>"ServoTester"</b> → <b>Connect</b>.</li>
+        <li>Despliega el servicio <code>4fafc201-…914b</code>.</li>
+        <li><b>Leer/recibir telemetría:</b> abre la característica <code>beb5483e-…00a1</code>, pulsa el icono de <b>download</b> (READ) y luego el de <b>subscribe</b> (campana/notify). Verás líneas como <code>CH:1,MODE:MANUAL,…</code> cada ~250 ms.</li>
+        <li><b>Mandar comandos:</b> abre la característica <code>beb5483e-…00a2</code>, pulsa <b>Write</b>, pega p. ej. <code>ch:2,mode:sweep</code> y envía (UTF-8, sin campo de longitud).</li>
+        <li>Al desconectar, el dispositivo <b>reanuda el advertising</b> automáticamente.</li>
+      </ol>
+      <div class="callout warn"><span class="ic">⚠️ iOS / permisos</span>
+        En iOS, Bluetooth debe estar activado y la app necesita permiso de "Bluetooth". Si no aparece, aleja otras conexiones BLE y vuelve a escanear.</div>
+    </div>
+  </section>
+
+  <!-- 8. GRAFICO -->
+  <section id="grafico">
+    <h2><span class="num">08</span> Gráfico de respuesta</h2>
+    <div class="card">
+      <p>Un <b>buffer circular de 64 muestras</b> guarda el ángulo del <b>canal activo</b> cada frame (~50 Hz). Se dibuja como gráfica de línea:</p>
+      <ul>
+        <li>En <b>MANUAL</b>, como tira inferior de la pantalla (junto al ángulo y la tele).</li>
+        <li>En <b>GRAFICO</b>, a pantalla completa.</li>
+        <li>El eje X es el tiempo (más antiguo a la izquierda); el eje Y va de 0° (abajo) a 180° (arriba).</li>
+      </ul>
+      <p>Úsalo para <b>ver el overshoot / rebote / jitter</b> de un servo: al soltar o cambiar el ángulo, el trazo mostrará si el servo se pasa de la consigna y vuelve (el clásico "rebote" de los SG90), o si tiembla (jitter) por alimentación débil.</p>
+      <div class="callout info"><span class="ic">📈 CÓMO LEERLO</span>
+        Una línea que sube rápido y "rebota" por encima de la consigna antes de asentarse = overshoot. Una línea "dentada" alrededor de un valor = jitter (revisa la fuente 5 V y el INA219). Una línea plana que no llega al objetivo = servo atascado o sin par suficiente.</div>
+    </div>
+  </section>
+
+  <!-- 9. ANALIZADOR -->
+  <section id="analizador">
+    <h2><span class="num">09</span> El analizador (igual que Nivel 2)</h2>
+    <div class="card">
+      <ul>
+        <li><b>Tensión de alimentación del servo</b> (<code>V</code>), medida con el divisor 10k/10k en GPIO3 (ADC) y corregida por <code>vCal</code>.</li>
+        <li><b>Corriente</b> (<code>I</code>, mA) y <b>potencia</b> (<code>W</code>) del servo, medidas con el INA219 en serie con el 5 V.</li>
+        <li><b>Alarma</b>: si <code>I > iThresh</code> (800 mA por defecto) o <code>V < 4.5 V</code>, la OLED marca <b>ALARMA</b> y suena el zumbador.</li>
+      </ul>
+      <p>Qué te dicen V e I (y cómo detectar un servo atascado/muerto):</p>
+      <ul>
+        <li><b>En reposo:</b> consumo bajo (decenas de mA), rail cerca de 5 V.</li>
+        <li><b>Al mover:</b> la corriente sube (100–400 mA según par). Si se dispara al umbral y se queda alta sin esfuerzo, el servo está <b>atascado</b> (tope forzado, engranaje roto, carga excesiva) → suena la alarma.</li>
+        <li><b>Tensión baja (&lt;4.5 V):</b> fuente externa débil o caída en cable/INA219.</li>
+        <li><b>Servo muerto:</b> ~0 mA y no se mueve, o corriente muy alta con tensión colapsada (corto interno).</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 10. CODIGO WALKTHROUGH -->
+  <section id="codigo">
+    <h2><span class="num">10</span> Recorrido del código por secciones</h2>
+    <div class="card">
+      <ol>
+        <li><b>Includes y pines</b> — Wire, Adafruit SSD1306/GFX, ESP32Servo, Preferences, Adafruit_INA219 y <b>BLEDevice/BLEServer/BLEUtils/BLE2902</b>. Se definen el nuevo pinout: <code>SERVO_PINS[4] = {10,1,2,21}</code>, <code>BUZZER_PIN=8</code>, etc.</li>
+        <li><b>Objetos globales</b> — <code>display</code>, <code>servos[4]</code> (array de <code>Servo</code>), <code>ina219</code>.</li>
+        <li><b>Multicanal</b> — <code>chanAngle[4]</code> (posición retenida por canal) y <code>activeChannel</code>.</li>
+        <li><b>Ajustes persistidos</b> — <code>minUs</code>, <code>maxUs</code>, <code>centerAngle</code>, <code>iThresh</code>, <code>vCal</code> con Preferences (namespace <code>servotester</code>).</li>
+        <li><b>Encoder por interrupciones</b> — igual que L2: CHANGE en CLK, debounce 5 ms, un detent = ±1. El <b>botón se sondea en <code>loop()</code></b> para distinguir pulsación <b>corta</b> (acción) de <b>larga</b> (cambio de canal, 700 ms).</li>
+        <li><b>ISRs</b> — <code>encoderISR()</code> acumula <code>encoderDelta</code> (<code>IRAM_ATTR</code>, <code>volatile</code>).</li>
+        <li><b>Helpers</b> — <code>angleToUs()</code>, <code>sweepAngle()</code>, <code>cycleChannel()</code>, <code>loadSettings()/saveSettings()</code>, <code>readVservo()</code>, <code>readINA219()</code>, <code>updateBuzzer()</code>, <code>updateAlarm()</code>.</li>
+        <li><b>Gráfico</b> — <code>graphBuf[64]</code> circular y <code>pushGraph()</code>; <code>drawGraph()</code>.</li>
+        <li><b>BLE</b> — <code>applyBleCommand()</code> parsea los comandos de escritura; <code>ServerCallbacks</code>/<code>WriteCallbacks</code>; <code>initBLE()</code> crea servicio, características (telemetría read+notify, escritura) y arranca advertising.</li>
+        <li><b>Máquina de estados</b> — <code>sampleButton()</code>, <code>handleInput()</code> (menu, manual, settings, CANAL, gráfico, long-press→canal), <code>drawMenu/drawServo/drawGraphScreen/drawSettings/drawGauge</code>.</li>
+        <li><b><code>setup()</code></b> — I²C, OLED, INA219 (<code>setCalibration_32V_2A()</code>), carga ajustes, <b>adjunta los 4 servos</b> (<code>attach(pin,500,2500)</code>) e <code>initBLE()</code>.</li>
+        <li><b><code>loop()</code></b> — muestrea botón/encoder, V/I, alarma, buzzer; calcula el ángulo del <b>canal activo</b> y escribe <b>solo ese canal</b>; empuja al gráfico; dibuja; <b>construye y notifica la telemetría BLE</b> cada 250 ms.</li>
+      </ol>
+    </div>
+  </section>
+  <!-- 11. CODIGO FUENTE -->
+  <section id="fuente">
+    <h2><span class="num">11</span> Código fuente completo</h2>
+    <div class="card">
+      <p>El código completo de <code>src/main.cpp</code> (Nivel 3), fiel al archivo fuente. Despliega para verlo. El resaltado de sintaxis se aplica en navegador.</p>
+      <details class="src">
+        <summary>Código fuente: src/main.cpp (603 líneas)</summary>
+<pre class="cpp"><code>/*
+ * Servo Tester (Nivel 3) for ESP32-C3 DevKitM-1
+ * -------------------------------------------------
+ * EXTENDE Nivel 2 (menu, manual, sweep, center, settings, analizador V/I,
+ * alarma, Preferences) con PREMIUM:
+ *   1. MULTICANAL: 4 servos (CH1..CH4). Un canal ACTIVO recibe los comandos
+ *      MANUAL/SWEEP/CENTER; los otros mantienen su ultima posicion.
+ *   2. BLE (NimBLE): servidor "ServoTester" con caracteristica de telemetria
+ *      (read+notify) y caracteristica de escritura (canal/modo/angulo).
+ *   3. GRAFICO de respuesta: buffer circular (~64 muestras) del angulo del
+ *      canal activo, dibujado como grafica de linea en la OLED.
+ *
+ * PINOUT NUEVO (documentado en README):
+ *   OLED SSD1306 I2C : SDA=GPIO6, SCL=GPIO7, addr 0x3C  (Adafruit SSD1306/GFX)
+ *   INA219            : mismo bus I2C (0x40)
+ *   Encoder HW-040    : CLK=GPIO4, DT=GPIO5, SW=GPIO20
+ *   V-sense divider   : GPIO3 (10k/10k desde el 5 V del servo)
+ *   Buzzer piezo      : GPIO8  (tambien es el LED onboard; usarlo como buzzer
+ *                               es seguro)
+ *   4 servos          : CH1=GPIO10, CH2=GPIO1, CH3=GPIO2, CH4=GPIO21
+ *      GPIO1 es el TX de UART0 (no usado por USB); GPIO2 es strapping pero
+ *      seguro como SALIDA de servo tras el arranque. Ver README.
+ *
+ * NOTA USB-CDC: no se usa ARDUINO_USB_CDC_ON_BOOT. Serial == UART0 (GPIO1/3),
+ * no visible por USB. Toda la info va en la OLED.
+ */
+
+#include &lt;Arduino.h&gt;
+#include &lt;Wire.h&gt;
+#include &lt;Adafruit_GFX.h&gt;
+#include &lt;Adafruit_SSD1306.h&gt;
+#include &lt;ESP32Servo.h&gt;
+#include &lt;Preferences.h&gt;
+#include &lt;Adafruit_INA219.h&gt;
+#include &lt;BLEDevice.h&gt;
+#include &lt;BLEServer.h&gt;
+#include &lt;BLEUtils.h&gt;
+#include &lt;BLE2902.h&gt;
+
+// ----------------------------- Pinout (3.3 V logic) -------------------------
+#define OLED_SDA    6
+#define OLED_SCL    7
+#define ENC_CLK     4
+#define ENC_DT      5
+#define ENC_SW      20
+#define VSENSE_PIN  3      // ADC1 ch3, 10k/10k divider desde el 5 V del servo
+#define BUZZER_PIN  8      // piezo buzzer (GPIO8 = LED onboard, seguro)
+
+#define N_CH        4
+const int SERVO_PINS[N_CH] = { 10, 1, 2, 21 };   // CH1..CH4
+
+// ----------------------------- OLED object ----------------------------------
+#define SCREEN_W 128
+#define SCREEN_H 64
+Adafruit_SSD1306 display(SCREEN_W, SCREEN_H, &Wire, -1);
+
+// ----------------------------- Servos (multicanal) --------------------------
+Servo servos[N_CH];
+int chanAngle[N_CH] = { 90, 90, 90, 90 };  // posicion retenida por canal
+int activeChannel = 0;                      // 0..3 (CH1..CH4)
+
+// ----------------------------- INA219 (analyzer) ----------------------------
+Adafruit_INA219 ina219;           // direccion por defecto 0x40
+
+// ----------------------------- Settings (persisted) -------------------------
+Preferences prefs;
+int   minUs       = 500;
+int   maxUs       = 2500;
+int   centerAngle = 90;
+int   iThresh     = 800;
+float vCal        = 1.0;
+
+const int minAng = 0;
+const int maxAng = 180;
+
+// ----------------------------- Encoder (interrupt based) --------------------
+volatile int  encoderDelta = 0;
+volatile unsigned long lastEncMs = 0;
+
+// Boton: se sondea en loop() (flanco) para distinguir corto/largo.
+// El ISR solo atiende el encoder (rotatorio), igual que N2.
+unsigned long btnPressMs = 0;
+bool btnPrev = HIGH;
+bool btnLongFired = false;
+bool buttonFlag = false;       // pulso corto (accion normal)
+bool longPressFlag = false;    // pulso largo (cambio de canal)
+const unsigned long LONG_PRESS_MS = 700;
+
+// ----------------------------- State machine --------------------------------
+enum Mode { MENU, MANUAL, SWEEP, CENTER, GRAFICO, SETTINGS };
+Mode mode = MENU;
+const char* modeNames[] = { "MENU", "MANUAL", "SWEEP", "CENTER", "GRAFICO", "SETTINGS" };
+
+int menuIndex = 0;
+const int MENU_COUNT = 6;
+const char* menuItems[] = { "MANUAL", "SWEEP", "CENTER", "CANAL", "GRAFICO", "SETTINGS" };
+
+int settingField = 0;
+const int SETTINGS_FIELDS = 4;
+
+// ----------------------------- Analyzer sample ------------------------------
+float vServo = 0.0;
+float iServo = 0.0;
+float pServo = 0.0;
+bool  alarmOn  = false;
+
+// ----------------------------- Response graph (ring buffer) -----------------
+const int GRAPH_N = 64;
+int   graphBuf[GRAPH_N];
+int   graphHead = 0;   // siguiente escritura
+int   graphCount = 0;  // muestras validas (&lt;= GRAPH_N)
+
+void pushGraph(int v) {
+  graphBuf[graphHead] = constrain(v, 0, 180);
+  graphHead = (graphHead + 1) % GRAPH_N;
+  if (graphCount &lt; GRAPH_N) graphCount++;
+}
+
+// ----------------------------- BLE ------------------------------------------
+#define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
+#define TELEMETRY_UUID      "beb5483e-36e1-4688-b7f0-0000000000a1"
+#define WRITE_UUID          "beb5483e-36e1-4688-b7f0-0000000000a2"
+
+BLEServer*        pServer = nullptr;
+BLECharacteristic* pTelemetry = nullptr;
+BLECharacteristic* pWrite = nullptr;
+bool                 bleConnected = false;
+unsigned long        lastNotifyMs = 0;
+const unsigned long  NOTIFY_MS = 250;
+String               lastTelemetry = "";
+
+// ----------------------------- ISR (encoder) --------------------------------
+void IRAM_ATTR encoderISR() {
+  unsigned long now = millis();
+  if (now - lastEncMs &lt; 5) return;     // 5 ms timestamp debounce
+  lastEncMs = now;
+  int clk = digitalRead(ENC_CLK);
+  if (clk == HIGH) {
+    int dt = digitalRead(ENC_DT);
+    encoderDelta += (dt == LOW) ? 1 : -1;   // CW vs CCW
+  }
+}
+
+// ----------------------------- Helpers --------------------------------------
+int angleToUs(int a) {
+  a = constrain(a, minAng, maxAng);
+  return (int)map((long)a, minAng, maxAng, minUs, maxUs);
+}
+
+int sweepAngle() {
+  unsigned long half = 1500;
+  unsigned long t = millis();
+  unsigned long phase = t % (2 * half);
+  int a;
+  if (phase &lt; half) a = (int)map((long)phase, 0, (long)half, 0, 180);
+  else              a = (int)map((long)phase, (long)half, 2 * (long)half, 180, 0);
+  return constrain(a, 0, 180);
+}
+
+void cycleChannel() {
+  activeChannel = (activeChannel + 1) % N_CH;
+}
+
+void loadSettings() {
+  prefs.begin("servotester", true);
+  minUs       = prefs.getUInt("minUs", 500);
+  maxUs       = prefs.getUInt("maxUs", 2500);
+  centerAngle = prefs.getUInt("center", 90);
+  iThresh     = prefs.getUInt("iThresh", 800);
+  vCal        = prefs.getFloat("vCal", 1.0);
+  prefs.end();
+  minUs       = constrain(minUs, 400, 1500);
+  maxUs       = constrain(maxUs, 1500, 2600);
+  centerAngle = constrain(centerAngle, 0, 180);
+  iThresh     = constrain(iThresh, 100, 5000);
+  if (vCal &lt;= 0.0 || isnan(vCal)) vCal = 1.0;
+}
+
+void saveSettings() {
+  prefs.begin("servotester", false);
+  prefs.putUInt("minUs",   (unsigned int)minUs);
+  prefs.putUInt("maxUs",   (unsigned int)maxUs);
+  prefs.putUInt("center",  (unsigned int)centerAngle);
+  prefs.putUInt("iThresh", (unsigned int)iThresh);
+  prefs.putFloat("vCal",   vCal);
+  prefs.end();
+}
+
+float readVservo() {
+  int raw = analogRead(VSENSE_PIN);
+  float v = raw * (3.3f / 4095.0f) * 2.0f * vCal;
+  return v;
+}
+
+void readINA219() {
+  float busV = ina219.getBusVoltage_V();
+  iServo = ina219.getCurrent_mA();
+  pServo = busV * (iServo / 1000.0f);
+}
+
+void updateBuzzer() {
+  static unsigned long lastBeep = 0;
+  static bool beepState = false;
+  if (alarmOn) {
+    if (millis() - lastBeep &gt; 250) {
+      lastBeep = millis();
+      beepState = !beepState;
+      digitalWrite(BUZZER_PIN, beepState);
+    }
+  } else {
+    digitalWrite(BUZZER_PIN, LOW);
+    beepState = false;
+  }
+}
+
+void updateAlarm() {
+  alarmOn = (iServo &gt; (float)iThresh) || (vServo &lt; 4.5f);
+}
+
+// ----------------------------- BLE: parse write -----------------------------
+// Acepta tokens "clave:valor" o "clave=valor" separados por ',', ';' o espacio.
+//   ch:2          -&gt; canal activo 1..4
+//   mode:manual   -&gt; manual | sweep | center  (tambien M/S/C)
+//   angle:120     -&gt; angulo objetivo 0..180 (en manual)
+void applyBleCommand(const String& s) {
+  int start = 0;
+  while (start &lt; s.length()) {
+    int sep = s.indexOf(',', start);
+    if (sep &lt; 0) sep = s.length();
+    String tok = s.substring(start, sep);
+    tok.trim();
+    if (tok.length()) {
+      int c = tok.indexOf(':');
+      if (c &lt; 0) c = tok.indexOf('=');
+      if (c &gt; 0) {
+        String key = tok.substring(0, c);
+        String val = tok.substring(c + 1);
+        key.toLowerCase();
+        val.toLowerCase();
+        key.trim(); val.trim();
+        if (key == "ch" || key == "channel") {
+          int ch = val.toInt();
+          if (ch &gt;= 1 && ch &lt;= N_CH) activeChannel = ch - 1;
+        } else if (key == "mode") {
+          if (val.startsWith("m")) mode = MANUAL;
+          else if (val.startsWith("s")) mode = SWEEP;
+          else if (val.startsWith("c")) mode = CENTER;
+        } else if (key == "angle" || key == "a") {
+          int ang = val.toInt();
+          ang = constrain(ang, minAng, maxAng);
+          if (mode == MANUAL) chanAngle[activeChannel] = ang;
+        }
+      }
+    }
+    start = sep + 1;
+  }
+}
+
+// ----------------------------- BLE callbacks --------------------------------
+class ServerCallbacks : public BLEServerCallbacks {
+  void onConnect(BLEServer* p) override { bleConnected = true; }
+  void onDisconnect(BLEServer* p) override {
+    bleConnected = false;
+    BLEDevice::startAdvertising();   // reanudar advertising
+  }
+};
+
+class WriteCallbacks : public BLECharacteristicCallbacks {
+  void onWrite(BLECharacteristic* pCharacteristic) override {
+    std::string v = pCharacteristic-&gt;getValue();
+    if (v.length()) applyBleCommand(String(v.c_str()));
+  }
+};
+
+void initBLE() {
+  BLEDevice::init("ServoTester");
+  pServer = BLEDevice::createServer();
+  pServer-&gt;setCallbacks(new ServerCallbacks());
+
+  BLEService* pService = pServer-&gt;createService(SERVICE_UUID);
+
+  // Telemetria: read + notify. El valor se actualiza en loop().
+  pTelemetry = pService-&gt;createCharacteristic(
+      TELEMETRY_UUID,
+      BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY);
+  pTelemetry-&gt;setValue("boot");
+
+  // Escritura: comandos desde el telefono.
+  pWrite = pService-&gt;createCharacteristic(
+      WRITE_UUID,
+      BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_WRITE_NR);
+  pWrite-&gt;setCallbacks(new WriteCallbacks());
+
+  pService-&gt;start();
+  BLEAdvertising* pAdv = BLEDevice::getAdvertising();
+  pAdv-&gt;addServiceUUID(SERVICE_UUID);
+  pAdv-&gt;start();
+}
+
+// ----------------------------- Input handling -------------------------------
+void sampleButton() {
+  bool btnNow = digitalRead(ENC_SW);
+  unsigned long now = millis();
+  if (btnPrev == HIGH && btnNow == LOW) {
+    btnPressMs = now;
+    btnLongFired = false;
+  }
+  if (btnPrev == LOW && btnNow == HIGH) {
+    // liberacion: corto solo si no fue largo
+    if (!btnLongFired && (now - btnPressMs) &lt; LONG_PRESS_MS) {
+      buttonFlag = true;
+    }
+    btnLongFired = false;
+  }
+  if (btnNow == LOW && !btnLongFired && (now - btnPressMs) &gt; LONG_PRESS_MS) {
+    btnLongFired = true;
+    longPressFlag = true;   // pulsacion larga: cambio de canal
+  }
+  btnPrev = btnNow;
+}
+
+void handleInput() {
+  noInterrupts();
+  int d = encoderDelta;
+  encoderDelta = 0;
+  interrupts();
+
+  if (d != 0) {
+    switch (mode) {
+      case MENU:
+        menuIndex = constrain(menuIndex + d, 0, MENU_COUNT - 1);
+        break;
+      case MANUAL:
+        chanAngle[activeChannel] = constrain(chanAngle[activeChannel] + d, minAng, maxAng);
+        break;
+      case SETTINGS:
+        if (settingField == 0)      minUs       = constrain(minUs + d * 10, 400, 1500);
+        else if (settingField == 1) maxUs       = constrain(maxUs + d * 10, 1500, 2600);
+        else if (settingField == 2) centerAngle = constrain(centerAngle + d, 0, 180);
+        else                        iThresh     = constrain(iThresh + d * 50, 100, 5000);
+        break;
+      default:
+        break; // SWEEP / CENTER / GRAFICO ignoran el encoder
+    }
+  }
+
+  // Pulsacion larga: cambiar de canal (en cualquier modo, salvo SETTINGS).
+  if (longPressFlag) {
+    longPressFlag = false;
+    if (mode != SETTINGS) cycleChannel();
+  }
+
+  if (buttonFlag) {
+    buttonFlag = false;
+    switch (mode) {
+      case MENU:
+        if      (menuIndex == 0) mode = MANUAL;
+        else if (menuIndex == 1) mode = SWEEP;
+        else if (menuIndex == 2) mode = CENTER;
+        else if (menuIndex == 3) { cycleChannel(); /* CANAL: vuelve al MENU */ }
+        else if (menuIndex == 4) mode = GRAFICO;
+        else if (menuIndex == 5) { mode = SETTINGS; settingField = 0; }
+        break;
+      case MANUAL:
+      case SWEEP:
+      case CENTER:
+      case GRAFICO:
+        mode = MENU;
+        break;
+      case SETTINGS:
+        settingField++;
+        if (settingField &gt;= SETTINGS_FIELDS) {
+          saveSettings();
+          mode = MENU;
+        }
+        break;
+    }
+  }
+}
+
+// ----------------------------- Rendering -------------------------------------
+void drawGauge(int x0, int y0, int w, int h, int ang) {
+  display.drawRect(x0, y0, w, h, WHITE);
+  int fill = map(constrain(ang, 0, 180), 0, 180, 0, w);
+  display.fillRect(x0, y0, fill, h, WHITE);
+}
+
+// Grafica de linea del buffer circular. Mapea angulo 0..180 al area.
+void drawGraph(int x0, int y0, int w, int h) {
+  // marco
+  display.drawRect(x0, y0, w, h, WHITE);
+  if (graphCount &lt; 2) return;
+  int step = (w - 2) / (GRAPH_N - 1);
+  int prevX = x0 + 1, prevY = 0;
+  for (int i = 0; i &lt; GRAPH_N; i++) {
+    int idx = (graphHead + i) % GRAPH_N;       // mas antiguo a la izquierda
+    int val = graphBuf[idx];
+    int x = x0 + 1 + i * step;
+    int y = y0 + h - 1 - map(constrain(val, 0, 180), 0, 180, 0, h - 2);
+    if (i == 0) { prevX = x; prevY = y; }
+    else display.drawLine(prevX, prevY, x, y, WHITE);
+    prevX = x; prevY = y;
+  }
+}
+
+void drawServo(const char* label, int ang, bool withGraph) {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 0);
+  display.print("CH"); display.print(activeChannel + 1);
+  display.print(" "); display.print(label);
+
+  if (alarmOn) {
+    display.setCursor(82, 0);
+    display.print("ALARMA");
+  }
+
+  if (withGraph) {
+    display.setCursor(0, 10);
+    display.print("V:"); display.print(vServo, 2);
+    display.print(" I:"); display.print((int)iServo); display.println("mA");
+
+    display.setTextSize(3);
+    display.setCursor(60, 20);
+    display.print(ang);
+    display.setTextSize(1);
+    display.setCursor(0, 44);
+    display.print(angleToUs(ang)); display.print(" us");
+    drawGraph(0, 44, SCREEN_W, 20);
+  } else {
+    display.setTextSize(3);
+    display.setCursor(20, 14);
+    display.print(ang);
+
+    display.setTextSize(1);
+    display.setCursor(0, 42);
+    display.print(angleToUs(ang));
+    display.print(" us");
+
+    display.setCursor(0, 42 + 10);
+    display.print("V:"); display.print(vServo, 2);
+    display.print("V I:"); display.print((int)iServo); display.print("mA");
+
+    drawGauge(4, 56, SCREEN_W - 8, 6, ang);
+  }
+  display.display();
+}
+
+void drawMenu() {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 0);
+  display.println("MENU  CH" + String(activeChannel + 1));
+
+  for (int i = 0; i &lt; MENU_COUNT; i++) {
+    display.setCursor(0, 12 + i * 9);
+    display.print(i == menuIndex ? "&gt; " : "  ");
+    display.println(menuItems[i]);
+  }
+  display.setCursor(0, 56);
+  display.print("V:"); display.print(vServo, 2);
+  display.print(" I:"); display.print((int)iServo); display.print("mA");
+  display.display();
+}
+
+void drawSettings() {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 0);
+  display.println("SETTINGS");
+
+  display.print(settingField == 0 ? " &gt;" : "  ");
+  display.print("minUs : "); display.println(minUs);
+  display.print(settingField == 1 ? " &gt;" : "  ");
+  display.print("maxUs : "); display.println(maxUs);
+  display.print(settingField == 2 ? " &gt;" : "  ");
+  display.print("center: "); display.println(centerAngle);
+  display.print(settingField == 3 ? " &gt;" : "  ");
+  display.print("iThrsh: "); display.print(iThresh); display.println("mA");
+
+  display.setCursor(0, 56);
+  display.println("SW=next  turn=edit");
+  display.display();
+}
+
+void drawGraphScreen() {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 0);
+  display.print("RESPUESTA CH"); display.print(activeChannel + 1);
+  if (alarmOn) { display.setCursor(82, 0); display.print("ALARMA"); }
+  drawGraph(0, 10, SCREEN_W, SCREEN_H - 10);
+  display.display();
+}
+
+// ----------------------------- Telemetry string -----------------------------
+void buildTelemetry() {
+  int a = chanAngle[activeChannel];
+  lastTelemetry = "CH:" + String(activeChannel + 1) +
+                  ",MODE:" + String(modeNames[mode]) +
+                  ",ANG:" + String(a) +
+                  ",PULSE:" + String(angleToUs(a)) +
+                  ",V:" + String(vServo, 2) +
+                  ",I:" + String((int)iServo);
+}
+
+// ----------------------------- Setup -----------------------------------------
+void setup() {
+  Serial.begin(115200);                 // UART0 solo; NO visible por USB
+
+  pinMode(BUZZER_PIN, OUTPUT);
+  digitalWrite(BUZZER_PIN, LOW);
+
+  analogReadResolution(12);
+  analogSetAttenuation(ADC_11db);
+  pinMode(VSENSE_PIN, INPUT);
+
+  Wire.begin(OLED_SDA, OLED_SCL);
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    while (true) { delay(1000); }
+  }
+  display.clearDisplay();
+  display.display();
+
+  if (!ina219.begin(&Wire)) {
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.println("INA219 ??");
+    display.display();
+    while (true) { delay(1000); }
+  }
+  ina219.setCalibration_32V_2A();
+
+  loadSettings();
+
+  // Multicanal: conectar los 4 servos con el mismo rango de pulso.
+  for (int i = 0; i &lt; N_CH; i++) {
+    servos[i].attach(SERVO_PINS[i], minUs, maxUs);
+    servos[i].writeMicroseconds(angleToUs(chanAngle[i]));
+  }
+
+  pinMode(ENC_CLK, INPUT_PULLUP);
+  pinMode(ENC_DT,  INPUT_PULLUP);
+  pinMode(ENC_SW,  INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(ENC_CLK), encoderISR, CHANGE);
+
+  initBLE();   // servidor BLE "ServoTester"
+}
+
+// ----------------------------- Loop ------------------------------------------
+void loop() {
+  sampleButton();
+  handleInput();
+
+  vServo = readVservo();
+  readINA219();
+  updateAlarm();
+  updateBuzzer();
+
+  int driveAngle = chanAngle[activeChannel];
+  switch (mode) {
+    case MANUAL:   driveAngle = chanAngle[activeChannel];                 break;
+    case CENTER:   chanAngle[activeChannel] = centerAngle;
+                  driveAngle = centerAngle;                              break;
+    case SWEEP:    driveAngle = sweepAngle();
+                  chanAngle[activeChannel] = driveAngle;                 break;
+    case GRAFICO:  driveAngle = chanAngle[activeChannel];                 break;
+    case SETTINGS: driveAngle = chanAngle[activeChannel];                 break;
+    case MENU:     driveAngle = -1;                                       break;
+  }
+
+  // Solo el canal ACTIVO recibe el comando; los otros mantienen su posicion.
+  if (mode != MENU) {
+    servos[activeChannel].writeMicroseconds(angleToUs(driveAngle));
+  }
+
+  // Muestra del grafico de respuesta (angulo del canal activo).
+  pushGraph(chanAngle[activeChannel]);
+
+  switch (mode) {
+    case MENU:    drawMenu();                              break;
+    case MANUAL:  drawServo("MANUAL", chanAngle[activeChannel], true);  break;
+    case SWEEP:   drawServo("SWEEP",  driveAngle, false);  break;
+    case CENTER:  drawServo("CENTER", centerAngle, false); break;
+    case GRAFICO: drawGraphScreen();                       break;
+    case SETTINGS: drawSettings();                         break;
+  }
+
+  // BLE: actualizar y notificar telemetria periodicamente.
+  buildTelemetry();
+  pTelemetry-&gt;setValue(lastTelemetry.c_str());
+  if (bleConnected && (millis() - lastNotifyMs &gt; NOTIFY_MS)) {
+    lastNotifyMs = millis();
+    pTelemetry-&gt;notify();
+  }
+
+  delay(20);   // ~50 Hz
+}</code></pre>
+      </details>
+    </div>
+  </section>
+
+  <!-- 12. CALIBRACION -->
+  <section id="calibracion">
+    <h2><span class="num">12</span> Calibración</h2>
+    <div class="card">
+      <h3>12.1 Límites del servo (minUs / maxUs)</h3>
+      <ol>
+        <li>Entra en <b>SETTINGS</b>.</li>
+        <li>Ajusta <code>minUs</code> al tope donde el servo <b>empieza</b> a moverse (típico 500 µs).</li>
+        <li>Ajusta <code>maxUs</code> al otro tope (típico 2500 µs).</li>
+        <li>Fija <code>center</code> (normalmente 90°) y pulsa SW para <b>guardar</b>.</li>
+      </ol>
+      <p>Estos límites definen el pulso en 0° y 180° de <b>todos</b> los canales. Rango permitido: <code>minUs</code> 400–1500, <code>maxUs</code> 1500–2600.</p>
+
+      <h3>12.2 Divisor de tensión (<code>vCal</code>)</h3>
+      <p>El divisor 10k/10k entrega la mitad de la tensión del servo al ADC: <code>Vservo = adc × (3.3/4095) × 2.0 × vCal</code>, con <code>vCal = 1.0</code> por defecto.</p>
+      <ol>
+        <li>Con el servo alimentado, mide con polímetro la <b>tensión real</b> del rail de 5 V.</li>
+        <li>Lee en la OLED la <code>V:</code> que muestra el firmware (sin calibrar, <code>vCal=1</code>).</li>
+        <li>Calcula <code>vCal = V_real_medida_polimetro / V_mostrada_OLED</code>.</li>
+        <li>Fíjalo de forma permanente en <code>loadSettings()</code>/Preferences (clave <code>vCal</code>) o recompila con el valor.</li>
+      </ol>
+
+      <h3>12.3 Umbral de corriente (<code>iThresh</code>)</h3>
+      <p>En SETTINGS ajusta <code>iThrsh</code> (campo 4). Por defecto 800 mA. Súbelo si disparas falsas alarmas con servos grandes (p. ej. MG996R en arranque), o bájalo para detectar cargas pequeñas.</p>
+
+      <div class="callout warn"><span class="ic">⚠️ NOTA DEL GRÁFICO</span>
+        El gráfico muestrea el <b>ángulo objetivo</b> enviado al servo, no la posición física real. Un servo lento o con carga mostrará el comando "ideal"; el overshoot físico se infiere comparando el trazo con el cambio de consigna. Para medir la posición real necesitarías un potenciómetro de realimentación externo.</div>
+    </div>
+  </section>
+  <!-- 13. TROUBLESHOOTING -->
+  <section id="trouble">
+    <h2><span class="num">13</span> Solución de problemas</h2>
+    <div class="card">
+      <table>
+        <caption>Síntoma → causa → solución</caption>
+        <thead><tr><th>Síntoma</th><th>Causa probable</th><th>Solución</th></tr></thead>
+        <tbody>
+          <tr><td>Pantalla en blanco</td><td>OLED mal cableada o dir. distinta</td><td>Revisa SDA/SCL/GND; confirma 0x3C.</td></tr>
+          <tr><td>"INA219 ??" al arrancar</td><td>INA219 ausente / mal cableado</td><td>Revisa I²C (GPIO6/7) y que VIN± tengan 5 V/GND.</td></tr>
+          <tr><td>Un servo no se mueve</td><td>Sin masa común o fuente 5 V ausente</td><td>Une GND de todo; alimenta los servos por separado.</td></tr>
+          <tr><td>OLED congelada en "INA219 ??"</td><td>INA219 no responde en 0x40</td><td>Verifica dirección y pull-ups de SDA/SCL.</td></tr>
+          <tr><td>V siempre alta</td><td>Pull-up del USB-UART en GPIO3</td><td>Calibra con <code>vCal</code> (§12.2).</td></tr>
+          <tr><td>Servo tiembla/garra</td><td>Fuente 5 V insuficiente</td><td>Usa fuente con más corriente (≥2 A para 4 servos).</td></tr>
+          <tr><td>Alarma suena sin motivo</td><td>Umbral <code>iThresh</code> muy bajo o ruido</td><td>Sube <code>iThresh</code> en SETTINGS.</td></tr>
+          <tr><td>No aparece "ServoTester" en BLE</td><td>Fuera de rango / permisos</td><td>Acerca el móvil; en iOS dale permiso de Bluetooth; reescanea.</td></tr>
+          <tr><td>nRF Connect no escribe</td><td>Formato incorrecto</td><td>Usa <code>clave:valor</code> (p. ej. <code>ch:2,mode:sweep</code>), sin bytes extra.</td></tr>
+          <tr><td><code>Serial</code> no muestra nada</td><td>Es UART0, no USB</td><td>Esperado; mira la OLED (ver nota USB-CDC).</td></tr>
+          <tr><td>Error de compilación <code>Serial</code></td><td>Flag USB-CDC mal puesto</td><td>No se usa <code>ARDUINO_USB_CDC_ON_BOOT</code> a propósito.</td></tr>
+          <tr><td>GPIO2 no arranca / servo raro</td><td>Pin strapping mal manejado</td><td>No fuerces GPIO2 antes del boot; el firmware lo usa solo como salida.</td></tr>
+          <tr><td>No veo Serial por USB</td><td><b>Gotcha USB-CDC</b>: <code>Serial</code> es UART0, no sale por el USB-C del DevKitM-1</td><td>El puerto USB-C es solo esptool. Toda la info va en la OLED; no busques monitor serie.</td></tr>
+          <tr><td>El gráfico no avanza</td><td>Canal en MENU o loop bloqueado</td><td>El gráfico solo muestrea en modos activos; sal de MENU.</td></tr>
+          <tr><td>Cambio de canal no funciona</td><td>Long-press mal interpretado</td><td>Mantén SW ≥0.7 s; en SETTINGS el long-press está deshabilitado.</td></tr>
+          <tr><td>INA219 lee 0</td><td>Cableado en paralelo, no en serie, o VIN± invertidos</td><td>El INA219 debe ir <b>en serie</b>: VIN+ a la fuente, VIN− a los servos.</td></tr>
+          <tr><td>Divisor mal (V inventada)</td><td>Resistencias no 10k/10k o offset de pull-up</td><td>Verifica valores y aplica <code>vCal</code>.</td></tr>
+          <tr><td>Alarma falsa de tensión</td><td>Caída de tensión en cable/INA219</td><td>Usa cables gruesos y fuente ≥2 A; revisa conexiones.</td></tr>
+          <tr><td>Encoder salta pasos</td><td>Rebote o interrupciones perdidas</td><td>El debounce es 5 ms; baja la velocidad de giro o revisa soldaduras.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 14. SEGURIDAD -->
+  <section id="seguridad">
+    <h2><span class="num">14</span> Seguridad / gotcha USB-CDC</h2>
+    <div class="card">
+      <div class="callout danger"><span class="ic">⛔ GOTCHA USB-CDC</span>
+        El core usado <b>no necesita</b> (y no se usa) <code>ARDUINO_USB_CDC_ON_BOOT</code>. Sin ese flag, <code>Serial</code> es <b>UART0 (GPIO1/3)</b>; el DevKitM-1 <b>no saca UART0 por el USB-C</b> (ese puerto USB es solo para esptool). La carga del firmware se hace por USB nativo con <code>esptool</code> (<code>/dev/ttyACM0</code> en Linux), <b>sin necesidad de pulsar BOOT</b>. Por eso <b>toda la información va en la OLED</b>, no en el monitor serie.</div>
+      <div class="callout danger"><span class="ic">⛔ FLASH / RAM</span>
+        El BLE (NimBLE) <b>sube mucho el uso de memoria</b>: este firmware llega a <b>~80.9% de flash</b>. No añadas más librerías BLE ni grandes buffers o se llenará la flash. Si compilas y ves advertencias de sectores de partición, reduce el <code>GRAPH_N</code> o quita algún modo.</div>
+      <div class="callout warn"><span class="ic">⚠️ INA219 EN SERIE</span>
+        El INA219 va <b>en serie</b> con el positivo de los servos, no en paralelo. Si lo conectas en paralelo no medirás corriente y puedes derivar el bus. Asegura que la masa (GND) de fuente, INA219 y placa están unidas; de lo contrario las lecturas de tensión serán erróneas.</div>
+      <div class="callout warn"><span class="ic">⚠️ SERVOS Y CORRIENTE</span>
+        Cuatro servos pueden superar los 2 A. Usa fuente dedicada y nunca alimentes los servos desde el pin 5V del ESP32. Un cortocircuito en un servo puede disparar la alarma y, en el peor caso, dañar la fuente.</div>
+    </div>
+  </section>
+
+  <!-- 15. COMPILAR -->
+  <section id="compilar">
+    <h2><span class="num">15</span> Cómo compilar y subir</h2>
+    <div class="card">
+      <p>Desde el directorio del proyecto (<code>nivel3/</code>):</p>
+      <p class="cmd"># Compilar (pio descarga las librerías automáticamente; BLE viene en el core)
+pio run
+
+# Cargar (esptool por USB nativo, /dev/ttyACM0; sin botón BOOT)
+pio run -t upload
+
+# Monitor serie (solo UART0, no visible por USB)
+pio device monitor</p>
+      <p><code>pio run</code> descarga las librerías (Adafruit SSD1306, Adafruit GFX, ESP32Servo, Adafruit INA219) automáticamente si hay red. El BLE (NimBLE) ya viene incluido en el framework, así que <b>no se añade ninguna librería BLE</b> en <code>lib_deps</code>.</p>
+      <div class="callout info"><span class="ic">🔧 platformio.ini</span>
+        <code>board_build.flash_mode = dio</code> está fijado en el <code>platformio.ini</code> (flash modo DIO, típico del C3). <code>upload_speed = 921600</code> para una carga rápida. No se pone <code>build_flags = -D ARDUINO_USB_CDC_ON_BOOT=1</code> a propósito.</div>
+      <p>No es necesario subir para compilar. Si cambias solo el código, <code>pio run</code> basta para validar la compilación.</p>
+    </div>
+  </section>
+
+  <!-- 16. FAQ -->
+  <section id="faq">
+    <h2><span class="num">16</span> FAQ</h2>
+    <div class="card">
+      <h4>¿Puedo usar 6 servos en vez de 4?</h4>
+      <p>Sí, ESP32Servo puede reservar hasta 6 canales LEDC en el C3. amplía <code>SERVO_PINS</code> y <code>N_CH</code>, y añade su gestión en el menú/CANAL. Ojo con el uso de flash/RAM y con los pines strapping.</p>
+      <h4>¿El BLE funciona sin Internet?</h4>
+      <p>Sí. BLE es local (peer-to-peer), no necesita Wi-Fi ni datos. El ESP32-C3 tiene ambas radios, pero este firmware solo usa BLE.</p>
+      <h4>¿Por qué no veo nada en el monitor serie?</h4>
+      <p>Por el gotcha USB-CDC: <code>Serial</code> es UART0 y el DevKitM-1 no lo expone por USB-C. Toda la telemetría está en la OLED y, si quieres, en la característica BLE de telemetría.</p>
+      <h4>¿El gráfico muestra la posición física real?</h4>
+      <p>No: muestrea el <b>ángulo objetivo</b> enviado al servo. El overshoot físico se infiere comparando el trazo con los cambios de consigna (ver §12.3).</p>
+      <h4>¿Puedo cambiar los UUID?</h4>
+      <p>Sí, están en <code>#define SERVICE_UUID / TELEMETRY_UUID / WRITE_UUID</code> al inicio de <code>main.cpp</code>. Recuerda actualizarlos también en la app/nRF Connect.</p>
+      <h4>¿Qué pasa si me desconecto del BLE?</h4>
+      <p>El ESP32 <b>reanuda el advertising</b> automáticamente (callback <code>onDisconnect</code>), así que puedes volver a conectar cuando quieras. El control local con el encoder sigue funcionando siempre.</p>
+      <h4>¿El INA219 mide la potencia de cada servo por separado?</h4>
+      <p>No. Al ir en serie con el bus de 5 V, mide la corriente <b>total</b> de los 4 servos juntos. Para por-servo necesitarías un INA219 por canal.</p>
+      <h4>¿Por qué GPIO2 como servo si es strapping?</h4>
+      <p>GPIO2 solo se lee como strapping en el arranque para fijar el voltaje de la flash. Una vez arrancado, es un GPIO normal y seguro como salida de servo. El firmware no lo toca antes de <code>setup()</code>.</p>
+    </div>
+  </section>
+  </main>
+</div>
+
+<footer>
+  Servo Tester Nivel 3 — Manual auto-contenido · Generado a partir de <code>README.md</code>, <code>main.cpp</code> y <code>platformio.ini</code>.<br>
+  ESP32-C3 · Arduino/PlatformIO · BLE NimBLE · 2026.
+</footer>
+
+<script>
+  // Scroll-spy para resaltar el ítem activo del TOC
+  var links = Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+  var map = {};
+  links.forEach(function(a){ var id=a.getAttribute('href').slice(1); var el=document.getElementById(id); if(el) map[id]=a; });
+  var obs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){ links.forEach(function(a){a.classList.remove('active');}); var a=map[e.target.id]; if(a) a.classList.add('active'); }
+    });
+  }, {rootMargin:'-10% 0px -80% 0px', threshold:0});
+  Object.keys(map).forEach(function(id){ obs.observe(document.getElementById(id)); });
+
+  // Resaltado de sintaxis básico para <pre class="cpp"><code>
+  (function(){
+    var kw = "void|int|float|bool|char|unsigned|long|short|double|String|const|static|volatile|struct|class|public|private|return|for|while|if|else|switch|case|break|continue|do|true|false|null|sizeof|enum|typedef|IRAM_ATTR";
+    var re = new RegExp("(\\/\\/[^\\n]*|\\/\\*[\\s\\S]*?\\*\\/)|(\"(?:[^\"\\\\]|\\\\.)*\"|'(?:[^'\\\\]|\\\\.)*')|(#[^\\n]*)|\\b("+kw+")\\b|(\\b\\d+(?:\\.\\d+)?\\b)", "g");
+    function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    document.querySelectorAll('pre.cpp code').forEach(function(el){
+      var t = esc(el.textContent);
+      t = t.replace(re, function(m,c,s,p,k,n){
+        if(c) return '<span class="c">'+c+'</span>';
+        if(s) return '<span class="s">'+s+'</span>';
+        if(p) return '<span class="p">'+p+'</span>';
+        if(k) return '<span class="k">'+k+'</span>';
+        if(n) return '<span class="n">'+n+'</span>';
+        return m;
+      });
+      el.innerHTML = t;
+    });
+  })();
+</script>
+</body>
+</html>

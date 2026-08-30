@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Servo Tester Nivel 1 — ESP32-C3 Super Mini · Manual completo</title>
+<style>
+  :root {
+    --bg:        #f6f8fb;
+    --surface:   #ffffff;
+    --ink:       #1d2433;
+    --ink-soft:  #4a5468;
+    --muted:     #7c869c;
+    --line:      #e3e8f0;
+    --brand:     #2b6ef2;
+    --brand-dk:  #1c4fbd;
+
+    --info:      #1f6fd6;
+    --info-bg:   #e8f2fd;
+    --warn:      #b9790a;
+    --warn-bg:   #fdf3e0;
+    --danger:    #c8362f;
+    --danger-bg: #fdeceb;
+    --ok:        #1f8a52;
+    --ok-bg:     #e7f6ec;
+
+    --sig-3v3:   #2f9e6f;
+    --sig-gnd:   #5b6472;
+    --sig-sda:   #c0392b;
+    --sig-scl:   #d68910;
+    --sig-servo: #8e44ad;
+    --sig-clk:   #2980b9;
+    --sig-dt:    #16a085;
+    --sig-sw:    #e67e22;
+
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(20,30,60,.06), 0 6px 20px rgba(20,30,60,.07);
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Noto Sans", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); line-height: 1.65; font-size: 16px; }
+
+  .wrap { display: flex; align-items: flex-start; gap: 28px; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+  .hero {
+    background: linear-gradient(135deg, #1c4fbd 0%, #2b6ef2 55%, #4f8ef7 100%);
+    color: #fff; padding: 54px 20px 46px; position: relative; overflow: hidden;
+  }
+  .hero::after { content: ""; position: absolute; inset: auto -10% -40% -10%; height: 220px;
+    background: radial-gradient(closest-side, rgba(255,255,255,.18), transparent); }
+  .hero-inner { max-width: 1200px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
+  .hero h1 { margin: 0 0 8px; font-size: clamp(1.8rem, 3.4vw, 2.7rem); letter-spacing: -.5px; }
+  .hero p.tag { margin: 0 0 18px; font-size: 1.08rem; opacity: .95; max-width: 720px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 10px; }
+  .badge { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,.16);
+    border: 1px solid rgba(255,255,255,.28); padding: 6px 12px; border-radius: 999px;
+    font-size: .82rem; font-weight: 600; backdrop-filter: blur(4px); }
+  .badge .dot { width: 8px; height: 8px; border-radius: 50%; background: #8ff0b6; }
+
+  nav.toc { position: sticky; top: 18px; flex: 0 0 252px; align-self: flex-start; background: var(--surface);
+    border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 16px 14px; max-height: calc(100vh - 36px); overflow: auto; }
+  nav.toc h2 { font-size: .78rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); margin: 4px 8px 12px; }
+  nav.toc ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+  nav.toc li { counter-increment: toc; }
+  nav.toc a { display: block; text-decoration: none; color: var(--ink-soft); font-size: .9rem;
+    padding: 7px 10px; border-radius: 9px; border-left: 3px solid transparent; transition: .15s; }
+  nav.toc a::before { content: counter(toc) ". "; color: var(--muted); font-variant-numeric: tabular-nums; }
+  nav.toc a:hover { background: var(--bg); color: var(--ink); }
+  nav.toc a.active { background: var(--info-bg); color: var(--brand-dk); border-left-color: var(--brand); font-weight: 600; }
+
+  main { flex: 1 1 auto; min-width: 0; padding: 26px 0 80px; }
+  section { scroll-margin-top: 18px; margin-bottom: 26px; }
+  section > h2 { font-size: 1.5rem; letter-spacing: -.3px; margin: 0 0 4px; display: flex; align-items: center; gap: 10px; }
+  section > h2 .num { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 9px; background: var(--brand);
+    color: #fff; font-size: .9rem; font-weight: 700; display: grid; place-items: center; }
+  section > .lead { color: var(--ink-soft); margin: 0 0 16px; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 20px 22px; margin-bottom: 16px; }
+  .card h3 { margin: 4px 0 10px; font-size: 1.12rem; }
+  .card h4 { margin: 18px 0 6px; font-size: 1rem; color: var(--brand-dk); }
+
+  h3 { font-size: 1.15rem; margin: 22px 0 8px; }
+  p { margin: 10px 0; }
+  ul, ol { margin: 10px 0; padding-left: 22px; }
+  li { margin: 5px 0; }
+  code { font-family: var(--mono); font-size: .88em; background: #eef1f6; padding: 1.5px 6px; border-radius: 6px; color: #25406b; }
+  strong { color: var(--ink); }
+
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: .92rem; overflow: hidden; border-radius: 10px; }
+  thead th { background: var(--brand); color: #fff; text-align: left; padding: 11px 13px; font-weight: 600; font-size: .85rem; letter-spacing: .02em; }
+  tbody td { padding: 10px 13px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tbody tr:nth-child(even) { background: #fafbfd; }
+  tbody tr:hover { background: var(--info-bg); }
+
+  .callout { border-radius: 12px; padding: 14px 16px 14px 48px; position: relative; margin: 16px 0; border: 1px solid; font-size: .95rem; }
+  .callout::before { position: absolute; left: 14px; top: 13px; font-size: 1.15rem; font-weight: 700; width: 22px; text-align: center; }
+  .callout.info   { background: var(--info-bg);   border-color: #bcdcfa; color: #13486f; }
+  .callout.info::before   { content: "i"; color: var(--info); }
+  .callout.warn   { background: var(--warn-bg);   border-color: #f3dca6; color: #7a4f06; }
+  .callout.warn::before   { content: "!"; color: var(--warn); }
+  .callout.danger { background: var(--danger-bg); border-color: #f3c5c2; color: #8c211c; }
+  .callout.danger::before { content: "\00d7"; color: var(--danger); }
+  .callout.ok     { background: var(--ok-bg);     border-color: #b9e6c9; color: #155f38; }
+  .callout.ok::before     { content: "\2713"; color: var(--ok); }
+  .callout b { color: inherit; }
+
+  pre { background: #0f1729; color: #e8eef9; border-radius: 12px; padding: 16px 18px; overflow: auto;
+    font-family: var(--mono); font-size: .82rem; line-height: 1.55; margin: 14px 0; border: 1px solid #1c2740; }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+  .c-com { color: #6b7c9e; font-style: italic; }
+  .c-kw  { color: #ff9d6c; }
+  .c-ty  { color: #7fd6ff; }
+  .c-fn  { color: #b6e3a7; }
+  .c-st  { color: #f4c469; }
+  .c-num { color: #d6a8ff; }
+  .c-pre { color: #ff8ab0; }
+  .c-mac { color: #ffd479; }
+
+  details.codebox { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); margin: 16px 0; overflow: hidden; }
+  details.codebox > summary { cursor: pointer; padding: 13px 18px; font-weight: 600; color: var(--brand-dk);
+    background: #f1f5fd; list-style: none; user-select: none; display: flex; align-items: center; justify-content: space-between; }
+  details.codebox > summary::-webkit-details-marker { display: none; }
+  details.codebox > summary::after { content: "\25bc mostrar"; font-size: .82rem; color: var(--muted); font-weight: 500; }
+  details.codebox[open] > summary::after { content: "\25b2 ocultar"; }
+  details.codebox[open] > pre { border-radius: 0; border: none; border-top: 1px solid var(--line); margin: 0; }
+
+  .wiring { display: grid; grid-template-columns: 1fr; gap: 0; }
+  .board { background: linear-gradient(180deg, #16213a, #0f1729); color: #dfe6f3; border-radius: 14px;
+    padding: 18px; border: 2px solid #2a3a5e; position: relative; box-shadow: var(--shadow); }
+  .board .board-title { font-weight: 700; letter-spacing: .04em; margin-bottom: 14px; color: #9fc0ff; display: flex; justify-content: space-between; }
+  .board .board-title small { color: #6b7c9e; font-weight: 500; }
+  .pins { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+  .pin { border-radius: 9px; padding: 9px 11px; background: #0c1322; border: 1px solid #243353; position: relative; }
+  .pin .label { font-size: .72rem; color: #9fb0cf; }
+  .pin .gpio { font-weight: 700; font-size: .95rem; }
+  .pin .func { font-size: .78rem; margin-top: 2px; }
+  .pin .sline { position: absolute; right: -10px; top: 50%; width: 10px; height: 3px; transform: translateY(-50%); border-radius: 2px; }
+
+  .dev { display: flex; gap: 14px; align-items: stretch; margin-top: 14px; flex-wrap: wrap; }
+  .module { flex: 1 1 200px; border-radius: 12px; padding: 14px; color: #fff; box-shadow: var(--shadow); position: relative; min-height: 92px; }
+  .module h4 { margin: 0 0 6px; font-size: .95rem; }
+  .module .conn { font-family: var(--mono); font-size: .76rem; opacity: .92; line-height: 1.5; }
+  .module .tag { position: absolute; top: 10px; right: 12px; font-size: .68rem; background: rgba(0,0,0,.28); padding: 2px 7px; border-radius: 6px; }
+  .m-oled  { background: linear-gradient(135deg,#b13b3b,#7e2b2b); }
+  .m-enc   { background: linear-gradient(135deg,#1f7a8c,#155f6e); }
+  .m-servo { background: linear-gradient(135deg,#7d4ba0,#5a3476); }
+  .m-pwr   { background: linear-gradient(135deg,#2f8f5b,#216b43); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; font-size: .82rem; color: var(--ink-soft); }
+  .legend i { width: 18px; height: 4px; border-radius: 2px; display: inline-block; }
+
+  .flow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 12px 0; }
+  .chip { background: var(--info-bg); color: var(--brand-dk); border: 1px solid #bcdcfa; padding: 7px 13px; border-radius: 9px; font-weight: 600; font-size: .9rem; }
+  .chip.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .chip small { display: block; font-weight: 500; font-size: .72rem; opacity: .8; }
+  .arrow { color: var(--muted); font-weight: 700; }
+
+  .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 14px; }
+  .mode-card { border: 1px solid var(--line); border-radius: 12px; padding: 15px; background: #fff; box-shadow: var(--shadow); border-top: 4px solid var(--brand); }
+  .mode-card h4 { margin: 0 0 6px; font-size: 1.02rem; }
+  .mode-card p { margin: 6px 0 0; font-size: .9rem; color: var(--ink-soft); }
+
+  .footer-note { text-align: center; color: var(--muted); font-size: .85rem; padding: 30px 20px 10px; }
+
+  @media (max-width: 900px) {
+    .wrap { flex-direction: column; }
+    nav.toc { position: static; width: 100%; flex-basis: auto; max-height: none; }
+    nav.toc ol { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+  }
+  @media (max-width: 560px) {
+    nav.toc ol { grid-template-columns: 1fr; }
+    table { font-size: .82rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <h1>Servo Tester Nivel 1</h1>
+    <p class="tag">Probador de servos de hobby con ESP32-C3 Super Mini, pantalla OLED y encoder rotatorio — manual técnico completo y exhaustivo.</p>
+    <div class="badges">
+      <span class="badge"><span class="dot"></span> Nivel 1</span>
+      <span class="badge">MCU: ESP32-C3 Super Mini</span>
+      <span class="badge">Framework: Arduino / PlatformIO</span>
+      <span class="badge">Flash: ~23.5% usada</span>
+      <span class="badge">Core: framework-arduinoespressif32 7.0.1</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="toc" id="toc">
+    <h2>Índice</h2>
+    <ol>
+      <li><a href="#intro">Introducción</a></li>
+      <li><a href="#teoria">Teoría</a></li>
+      <li><a href="#bom">Materiales</a></li>
+      <li><a href="#pinout">Pinout</a></li>
+      <li><a href="#wiring">Conexionado</a></li>
+      <li><a href="#modos">Modos</a></li>
+      <li><a href="#codigo">Código</a></li>
+      <li><a href="#calib">Calibración</a></li>
+      <li><a href="#trouble">Solución de problemas</a></li>
+      <li><a href="#usbcdc">Trampa USB-CDC</a></li>
+      <li><a href="#build">Compilar y cargar</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <!-- 1. INTRO -->
+    <section id="intro">
+      <h2><span class="num">1</span> Introducción</h2>
+      <p class="lead">Qué es este dispositivo y por qué funciona así.</p>
+      <div class="card">
+        <p>Este proyecto convierte un <strong>ESP32-C3 Super Mini</strong> en un <strong>probador de servos de hobby</strong> con pantalla OLED. Permite mover un servo manualmente, barrerlo de extremo a extremo (<em>sweep</em>), centrarlo y configurar los límites de pulsos (µs) que se guardan en memoria no volátil mediante <code>Preferences</code>. Todo el control se hace con un <strong>encoder rotatorio con pulsador</strong> (HW-040 / KY-040).</p>
+        <p>El servo se alimenta <strong>siempre</strong> desde una fuente externa de 5&nbsp;V con <strong>masa (GND) común</strong> con la placa. La lógica de la placa y del encoder es de 3.3&nbsp;V. La salida de depuración por <code>Serial</code> no está disponible por USB (ver apartado <a href="#usbcdc">10</a>): toda la información se muestra en la OLED.</p>
+        <div class="callout info">
+          <b>En una frase:</b> un instrumento de banco de sobremesa que genera el tren de pulsos PWM de 50&nbsp;Hz correcto para cualquier servo estándar y te deja inspeccionar y calibrar su recorrido real sin necesidad de ordenador.
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. TEORIA -->
+    <section id="teoria">
+      <h2><span class="num">2</span> Teoría</h2>
+      <p class="lead">Los fundamentos que necesitas para entender —y no solo copiar— el montaje.</p>
+      <div class="card">
+        <h3>2.1 ¿Qué es un servo de hobby?</h3>
+        <p>Un servo es un motor de corriente continua con reductora, potenciómetro de realimentación interno y una placa de control. En lugar de indicarle "gira a tal velocidad", le indicas <strong>posición</strong>: el controlador interno compara el pulso recibido con la posición medida y mueve el motor hasta igualarlas. Por eso es un sistema de <em>posicionamiento</em>, no de velocidad.</p>
+
+        <h3>2.2 PWM a 50&nbsp;Hz y el pulso de posición</h3>
+        <p>Los servos estándar se controlan con <strong>PWM de 50&nbsp;Hz</strong> (periodo de 20&nbsp;ms). Lo que importa no es el ciclo de trabajo medio, sino el <strong>ancho del pulso alto</strong> dentro de cada periodo:</p>
+        <ul>
+          <li><code>~1000–1500&nbsp;µs</code> → cerca del tope en un sentido (típicamente 0°).</li>
+          <li><code>1500&nbsp;µs</code> → posición central (90° en un servo de 180°).</li>
+          <li><code>~1500–2000&nbsp;µs</code> → cerca del tope opuesto (180°).</li>
+        </ul>
+        <div class="callout info">
+          El fabricante suele cotar <b>500–2500&nbsp;µs ↔ 0–180°</b>, pero muchos servos reales solo recorren bien entre 1000 y 2000&nbsp;µs. Por eso este tester deja <b>calibrar</b> <code>minUs</code>/<code>maxUs</code> (apartado <a href="#calib">8</a>).
+        </div>
+
+        <h3>2.3 Mapeo ángulo ↔ microsegundos</h3>
+        <p>El firmware aplica una regla de tres lineal con <code>map()</code> de Arduino:</p>
+        <pre><code><span class="c-ty">int</span> <span class="c-fn">angleToUs</span>(<span class="c-ty">int</span> a) {
+  a = <span class="c-fn">constrain</span>(a, minAng, maxAng);      <span class="c-com">// 0..180</span>
+  <span class="c-kw">return</span> (<span class="c-ty">int</span>)<span class="c-fn">map</span>((<span class="c-ty">long</span>)a, minAng, maxAng, minUs, maxUs);
+}</code></pre>
+        <p>Con los valores por defecto (<code>minUs=500</code>, <code>maxUs=2500</code>) el servo recibe 500&nbsp;µs en 0° y 2500&nbsp;µs en 180°. Si calibras a 1000/2000, el mismo 0–180° se entrega como 1000–2000&nbsp;µs y el recorrido se adapta al servo real.</p>
+
+        <h3>2.4 ¿Por qué el ESP32-C3 usa el periférico LEDC?</h3>
+        <p>El ESP32-C3 <strong>no tiene PWM por hardware "clásico"</strong> tipo AVR. La librería <code>ESP32Servo</code> genera la señal de 50&nbsp;Hz usando el periférico <strong>LEDC</strong> (LED Control), un generador de PWM de 6 canales con resolución configurable. Ventajas:</p>
+        <ul>
+          <li>Produce pulsos estables sin bloquear el <code>loop()</code> con <code>delay()</code>.</li>
+          <li>Resolución fina: con 50&nbsp;Hz y 16 bits logra un paso de microsegundos, suficiente para posiciones suaves.</li>
+          <li>La CPU queda libre para atender el encoder por interrupciones y refrescar la OLED.</li>
+        </ul>
+        <div class="callout ok">Con <code>servo.attach(SERVO_PIN, minUs, maxUs)</code> se reserva un canal LEDC y se fija el rango; luego <code>servo.writeMicroseconds()</code> sólo actualiza el comparador.</div>
+
+        <h3>2.5 Nivel lógico de 3.3&nbsp;V</h3>
+        <p>El ESP32-C3 es un microcontrolador de <strong>3.3&nbsp;V</strong> en sus GPIO. La línea de señal del servo (<code>SERVO_PIN = GPIO10</code>) saca 3.3&nbsp;V de nivel alto, que es válido como "1" lógico para la mayoría de servos (su umbral de entrada suele estar sobre 2&nbsp;V). La OLED y el encoder también se alimentan a 3.3&nbsp;V desde el propio regulador de la placa.</p>
+
+        <h3>2.6 ¿Por qué el servo necesita 5&nbsp;V EXTERNOS con GND común?</h3>
+        <p>Los servos consumen mucha corriente al arrancar (hasta ~1&nbsp;A en servo estándar, más en MG996R). El ESP32-C3 Super Mini sólo puede entregar decenas de mA por su regulador 3.3&nbsp;V; si intentas alimentar el servo desde el 3V3 de la placa:</p>
+        <ul>
+          <li>El regulador se satura y la tensión cae → el C3 se reinicia (<em>brown-out</em>).</li>
+          <li>El servo "tiembla" o no llega al tope por falta de par.</li>
+        </ul>
+        <p>Por ello se usa una <strong>fuente de 5&nbsp;V externa</strong> (USB de pared, batería, alimentador) para el VCC del servo. Pero ambos circuitos deben compartir la <strong>misma masa (GND)</strong>: sin GND común, la señal de 3.3&nbsp;V no tiene referencia y el servo no entiende nada.</p>
+        <div class="callout danger"><b>GND común obligatorio.</b> Une físicamente el GND de la placa, OLED, encoder, servo y fuente 5&nbsp;V. Es el error nº&nbsp;1 de "el servo no se mueve".</div>
+
+        <h3>2.7 ¿Por qué un encoder HW-040 (incremental, cuadratura) y no un potenciómetro?</h3>
+        <p>Un potenciómetro da una posición <em>absoluta</em> pero ensucia el diseño (ADC, ruido, desgaste mecánico) y no aporta nada a un "tester" que sólo necesita <em>ajustar</em>. El encoder HW-040 es:</p>
+        <ul>
+          <li><strong>Incremental y de cuadratura</strong>: dos canales (CLK/DT) desfasados 90° permiten detectar dirección y contar <em>detents</em> (clics) con una ISR.</li>
+          <li><strong>Sin fin</strong>: giras cuantas vueltas quieras; ideal para navegar un menú y ajustar un valor numérico.</li>
+          <li><strong>Integra un pulsador (SW)</strong>: un único componente sirve de "cursor + enter + back".</li>
+          <li><strong>Robusto y barato</strong>, y su lectura por interrupción CHANGE deja el <code>loop()</code> libre.</li>
+        </ul>
+        <div class="callout info">Un detent = ±1° en MANUAL, o ±10&nbsp;µs / ±1° en SETTINGS. El debounce por marca de tiempo (5&nbsp;ms en CLK, 50&nbsp;ms en SW) filtra el rebote mecánico.</div>
+      </div>
+    </section>
+    <!-- 3. BOM -->
+    <section id="bom">
+      <h2><span class="num">3</span> Lista de materiales (BOM)</h2>
+      <p class="lead">Todo lo que necesitas en el banco.</p>
+      <div class="card">
+        <table>
+          <thead>
+            <tr><th>Cantidad</th><th>Componente</th><th>Notas de compra</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>ESP32-C3 Super Mini</td><td>Placa de desarrollo; ojo, hay variantes de pines. Usa la de 17 pines con USB-C.</td></tr>
+            <tr><td>1</td><td>Pantalla OLED SSD1306 128×64 I²C</td><td>Dirección 0x3C. Busca "0.96 pulgadas I2C". Lleva 4 pines (VCC/GND/SDA/SCL).</td></tr>
+            <tr><td>1</td><td>Servo de hobby (estándar, 50&nbsp;Hz)</td><td>SG90 (pequeño) o MG996R (alto par). Cualquiera de 50&nbsp;Hz sirve.</td></tr>
+            <tr><td>1</td><td>Encoder rotatorio HW-040 (KY-040)</td><td>CLK/DT/SW de 5 pines (incluye VCC/GND). Los módulos KY-040 traen pull-ups; aquí se usan los pull-up del C3.</td></tr>
+            <tr><td>1</td><td>Fuente de 5&nbsp;V externa para el servo</td><td>≥1&nbsp;A recomendado (cargador USB de pared o bancada). No uses el 3V3 de la placa.</td></tr>
+            <tr><td>–</td><td>Cables Dupont macho-macho</td><td>Un juego de 20–40 unidades. Úsalos para protoboard y para soldar al servo.</td></tr>
+            <tr><td>–</td><td>Protoboard (breadboard)</td><td>Media o completa, para montar sin soldar.</td></tr>
+            <tr><td>–</td><td>Cable USB-C de datos</td><td>Para programar la placa (debe transmitir datos, no solo carga).</td></tr>
+          </tbody>
+        </table>
+        <div class="callout warn">Compatibilidad de pines: el ESP32-C3 Super Mini asigna <b>GPIO6/7</b> a SDA/SCL y <b>GPIO10</b> a la señal del servo. Si tu placa difiere, ajusta los <code>#define</code> en <code>main.cpp</code>; el <code>platformio.ini</code> no cambia.</div>
+      </div>
+    </section>
+
+    <!-- 4. PINOUT -->
+    <section id="pinout">
+      <h2><span class="num">4</span> Pinout completo</h2>
+      <p class="lead">Tabla coloreada de cada GPIO y su función.</p>
+      <div class="card">
+        <table>
+          <thead>
+            <tr><th>GPIO</th><th>Función</th><th>Conexión física</th><th>Nota</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><b>GPIO6</b></td><td>OLED SDA (I²C dato)</td><td>SDA de la OLED</td><td style="border-left:3px solid var(--sig-sda)">Pull-up interno del bus I²C.</td></tr>
+            <tr><td><b>GPIO7</b></td><td>OLED SCL (I²C clock)</td><td>SCL de la OLED</td><td style="border-left:3px solid var(--sig-scl)">100&nbsp;kHz por defecto en Wire.</td></tr>
+            <tr><td><b>GPIO10</b></td><td>Señal servo (PWM/LEDC)</td><td>Cable de señal del servo (naranja/amarillo)</td><td style="border-left:3px solid var(--sig-servo)">3.3&nbsp;V de nivel alto; rango 500–2500&nbsp;µs.</td></tr>
+            <tr><td><b>GPIO4</b></td><td>Encoder CLK</td><td>CLK del HW-040</td><td style="border-left:3px solid var(--sig-clk)">Interrupción CHANGE + debounce 5&nbsp;ms.</td></tr>
+            <tr><td><b>GPIO5</b></td><td>Encoder DT</td><td>DT del HW-040</td><td style="border-left:3px solid var(--sig-dt)">Se lee dentro de la ISR para la dirección.</td></tr>
+            <tr><td><b>GPIO20</b></td><td>Encoder SW (pulsador)</td><td>SW del HW-040</td><td style="border-left:3px solid var(--sig-sw)">Interrupción FALLING + debounce 50&nbsp;ms.</td></tr>
+            <tr><td><b>GND</b></td><td>Masa común</td><td>OLED, encoder, servo y fuente 5&nbsp;V</td><td style="border-left:3px solid var(--sig-gnd)">¡Debe ser única y compartida por todos!</td></tr>
+            <tr><td><b>3V3</b></td><td>3.3&nbsp;V</td><td>VCC de la OLED y del encoder</td><td style="border-left:3px solid var(--sig-3v3)">Salida del regulador del C3.</td></tr>
+            <tr><td><b>5V ext.</b></td><td>5&nbsp;V externos</td><td>VCC (rojo) del servo</td><td style="border-left:3px solid var(--sig-servo)">Desde fuente externa, NO del 3V3 de la placa.</td></tr>
+          </tbody>
+        </table>
+        <div class="legend">
+          <span><i style="background:var(--sig-3v3)"></i> 3.3&nbsp;V</span>
+          <span><i style="background:var(--sig-gnd)"></i> GND</span>
+          <span><i style="background:var(--sig-sda)"></i> SDA</span>
+          <span><i style="background:var(--sig-scl)"></i> SCL</span>
+          <span><i style="background:var(--sig-servo)"></i> Señal servo</span>
+          <span><i style="background:var(--sig-clk)"></i> CLK</span>
+          <span><i style="background:var(--sig-dt)"></i> DT</span>
+          <span><i style="background:var(--sig-sw)"></i> SW</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. WIRING -->
+    <section id="wiring">
+      <h2><span class="num">5</span> Diagrama de conexión</h2>
+      <p class="lead">Representación visual coloreada por tipo de señal.</p>
+      <div class="card">
+        <div class="wiring">
+          <div class="board">
+            <div class="board-title">ESP32-C3 Super Mini <small>lógica 3.3&nbsp;V</small></div>
+            <div class="pins">
+              <div class="pin"><div class="label">GPIO6</div><div class="gpio">6</div><div class="func">OLED SDA</div><span class="sline" style="background:var(--sig-sda)"></span></div>
+              <div class="pin"><div class="label">GPIO7</div><div class="gpio">7</div><div class="func">OLED SCL</div><span class="sline" style="background:var(--sig-scl)"></span></div>
+              <div class="pin"><div class="label">GPIO10</div><div class="gpio">10</div><div class="func">Señal servo</div><span class="sline" style="background:var(--sig-servo)"></span></div>
+              <div class="pin"><div class="label">GPIO4</div><div class="gpio">4</div><div class="func">ENC CLK</div><span class="sline" style="background:var(--sig-clk)"></span></div>
+              <div class="pin"><div class="label">GPIO5</div><div class="gpio">5</div><div class="func">ENC DT</div><span class="sline" style="background:var(--sig-dt)"></span></div>
+              <div class="pin"><div class="label">GPIO20</div><div class="gpio">20</div><div class="func">ENC SW</div><span class="sline" style="background:var(--sig-sw)"></span></div>
+              <div class="pin"><div class="label">3V3</div><div class="gpio">3V3</div><div class="func">salida reg.</div><span class="sline" style="background:var(--sig-3v3)"></span></div>
+              <div class="pin"><div class="label">GND</div><div class="gpio">GND</div><div class="func">masa común</div><span class="sline" style="background:var(--sig-gnd)"></span></div>
+            </div>
+          </div>
+
+          <div class="dev">
+            <div class="module m-oled">
+              <span class="tag">I²C 0x3C</span>
+              <h4>OLED SSD1306</h4>
+              <div class="conn">VCC → 3V3<br>SDA → GPIO6<br>SCL → GPIO7<br>GND → GND</div>
+            </div>
+            <div class="module m-enc">
+              <span class="tag">HW-040</span>
+              <h4>Encoder rotatorio</h4>
+              <div class="conn">VCC → 3V3<br>CLK → GPIO4<br>DT&nbsp;&nbsp;→ GPIO5<br>SW&nbsp;&nbsp;→ GPIO20<br>GND → GND</div>
+            </div>
+            <div class="module m-servo">
+              <span class="tag">50 Hz</span>
+              <h4>Servo de hobby</h4>
+              <div class="conn">Señal (naranja) → GPIO10<br>VCC (rojo) → 5V ext.<br>GND (marrón) → GND</div>
+            </div>
+            <div class="module m-pwr">
+              <span class="tag">externa</span>
+              <h4>Fuente 5&nbsp;V</h4>
+              <div class="conn">+5V → VCC servo<br>GND → GND (común)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="legend">
+          <span><i style="background:var(--sig-3v3)"></i> 3.3&nbsp;V (lógica)</span>
+          <span><i style="background:var(--sig-gnd)"></i> GND (masa común)</span>
+          <span><i style="background:var(--sig-sda)"></i> SDA</span>
+          <span><i style="background:var(--sig-scl)"></i> SCL</span>
+          <span><i style="background:var(--sig-servo)"></i> Señal servo</span>
+          <span><i style="background:var(--sig-clk)"></i> CLK</span>
+          <span><i style="background:var(--sig-dt)"></i> DT</span>
+          <span><i style="background:var(--sig-sw)"></i> SW</span>
+        </div>
+
+        <h4>Apoyo ASCII (mismas conexiones)</h4>
+        <pre><code>                 ESP32-C3 Super Mini
+             +--------------------------+
+    USB-C --&gt;|                          |
+             |  3V3 ---+--------+       |
+             |         |        |       |
+             |  GPIO6 -+-- SDA  |       |
+             |  GPIO7 -+-- SCL  |  OLED SSD1306 (I2C, 0x3C)
+             |  GND  --+-- GND  |       |
+             |         |        |       |
+             |  GPIO4 -+-- CLK  |       |
+             |  GPIO5 -+-- DT   |  HW-040 encoder
+             |  GPIO20-+-- SW   |       |
+             |  GND  --+-- GND  |       |
+             |         |        |       |
+             |  GPIO10-+-- SIGNAL SERVO |  (naranja/amarillo)
+             |  GND  --+-- GND  |       |
+             +---------+--------+-------+      +-------------------+
+                                             | Fuente 5V externa |
+                                             |  +5V --&gt; VCC servo |
+                                             |  GND --&gt; GND servo |
+                                             +-------------------+</code></pre>
+        <div class="callout info"><b>Masa común:</b> el GND de la placa, OLED, encoder, servo y fuente de 5&nbsp;V <b>deben estar unidos físicamente</b>. Sin eso, la señal de 3.3&nbsp;V no tiene referencia.</div>
+      </div>
+    </section>
+    <!-- 6. MODOS -->
+    <section id="modos">
+      <h2><span class="num">6</span> Explicación de cada modo</h2>
+      <p class="lead">Máquina de estados y navegación con el encoder.</p>
+      <div class="card">
+        <h3>6.1 Flujo de estados y navegación</h3>
+        <p>Al arrancar se muestra el <strong>MENU</strong>. Girar el encoder mueve el cursor; pulsar el botón (SW) entra en la opción seleccionada. En cualquier submodo, <strong>pulsar SW vuelve al MENU</strong> (salvo en SETTINGS, que guarda y luego sale).</p>
+        <div class="flow">
+          <span class="chip active">MENU<small>girar = cursor</small></span>
+          <span class="arrow">→ SW</span>
+          <span class="chip">MANUAL<small>±1°/detent</small></span>
+          <span class="chip">SWEEP<small>auto 0↔180</small></span>
+          <span class="chip">CENTER<small>fija centro</small></span>
+          <span class="chip">SETTINGS<small>min/max/center</small></span>
+        </div>
+        <p>En <strong>SWEEP</strong> y <strong>CENTER</strong> el encoder se ignora; en <strong>SETTINGS</strong> el giro edita el campo activo y SW avanza de campo. El botón SW actúa como:</p>
+        <ul>
+          <li><strong>MENU</strong>: entrar en la opción marcada con <code>&gt;</code>.</li>
+          <li><strong>MANUAL / SWEEP / CENTER</strong>: volver al MENU.</li>
+          <li><strong>SETTINGS</strong>: siguiente campo; tras el último, guarda y vuelve al MENU.</li>
+        </ul>
+
+        <h3>6.2 Tarjeta de modos</h3>
+        <div class="mode-grid">
+          <div class="mode-card"><h4>MENU</h4><p>Lista MANUAL / SWEEP / CENTER / SETTINGS. Cursor con <code>&gt;</code>; SW entra.</p></div>
+          <div class="mode-card"><h4>MANUAL</h4><p>Cada detent ajusta el ángulo ±1° dentro de [0,180]; mueve el servo en vivo.</p></div>
+          <div class="mode-card"><h4>SWEEP</h4><p>Oscila 0°→180°→0° automático, ~1.5&nbsp;s por dirección (rampa triangular). Muestra ángulo en vivo.</p></div>
+          <div class="mode-card"><h4>CENTER</h4><p>Mantiene el servo en <code>centerAngle</code> (por defecto 90° = 1500&nbsp;µs).</p></div>
+          <div class="mode-card"><h4>SETTINGS</h4><p>Edita <code>minUs</code>, <code>maxUs</code>, <code>center</code>; se guarda con Preferences (namespace <code>servotester</code>).</p></div>
+        </div>
+
+        <h3>6.3 Detalle de SETTINGS</h3>
+        <ul>
+          <li>Girar el encoder <strong>edita el campo seleccionado</strong>:
+            <ul>
+              <li><code>minUs</code> (400–1500&nbsp;µs) en pasos de 10.</li>
+              <li><code>maxUs</code> (1500–2600&nbsp;µs) en pasos de 10.</li>
+              <li><code>center</code> (0–180°) en pasos de 1.</li>
+            </ul>
+          </li>
+          <li>Pulsar <strong>SW avanza al siguiente campo</strong>. Tras el último campo, otra pulsación <strong>guarda</strong> y vuelve al MENU.</li>
+        </ul>
+        <p>La OLED siempre muestra: línea&nbsp;1 = modo; número grande del ángulo (<code>textSize 3</code>); debajo el ancho de pulso en µs y una barra <em>gauge</em>.</p>
+        <div class="callout info">Persistencia: <code>loadSettings()</code> lee al arrancar y <code>saveSettings()</code> escribe al salir de SETTINGS. Claves: <code>minUs</code>, <code>maxUs</code>, <code>center</code> en el namespace <code>servotester</code>. Sobrevive a reinicios.</div>
+      </div>
+    </section>
+
+    <!-- 7. CODIGO -->
+    <section id="codigo">
+      <h2><span class="num">7</span> Recorrido del código</h2>
+      <p class="lead">Cómo está organizado <code>src/main.cpp</code> (305 líneas).</p>
+      <div class="card">
+        <ol>
+          <li><strong>Includes y pines</strong> — <code>Wire</code>, <code>Adafruit_SSD1306/GFX</code>, <code>ESP32Servo</code>, <code>Preferences</code>; pines según el apartado 4.</li>
+          <li><strong>Objetos globales</strong> — <code>display</code> (OLED 128×64) y <code>servo</code>.</li>
+          <li><strong>Ajustes persistidos</strong> — <code>minUs</code>, <code>maxUs</code>, <code>centerAngle</code> se cargan con <code>loadSettings()</code> y guardan con <code>saveSettings()</code>. Dominio de ángulo fijo 0..180°.</li>
+          <li><strong>Encoder por interrupciones</strong> — <code>CHANGE</code> en CLK, lee DT, debounce por marca de tiempo (5&nbsp;ms). Un detent = ±1°. Se descarta ESP32Encoder/PCNT para compilar limpio.</li>
+          <li><strong>ISRs</strong> — <code>encoderISR()</code> acumula <code>encoderDelta</code>; <code>buttonISR()</code> marca <code>buttonFlag</code>. Ambas <code>IRAM_ATTR</code> y variables <code>volatile</code>.</li>
+          <li><strong>Helpers</strong> — <code>angleToUs()</code> mapea ángulo→µs; <code>sweepAngle()</code> genera la rampa triangular.</li>
+          <li><strong>Máquina de estados</strong> — <code>handleInput()</code> consume encoder/botón y cambia de modo; <code>drawMenu/drawServo/drawSettings/drawGauge</code> renderizan la OLED.</li>
+          <li><strong><code>setup()</code></strong> — I²C, OLED, carga ajustes, <code>servo.attach()</code>, interrupciones. Watchdog opcional comentado.</li>
+          <li><strong><code>loop()</code></strong> — lee entradas, calcula ángulo según modo, escribe con <code>servo.writeMicroseconds()</code> y dibuja. Refresco ~50&nbsp;Hz (<code>delay(20)</code>).</li>
+        </ol>
+
+        <details class="codebox">
+          <summary>Código fuente completo de src/main.cpp</summary>
+<pre><code><span class="c-com">/*</span>
+<span class="c-com"> * Servo Tester (Nivel 1) for ESP32-C3 Super Mini</span>
+<span class="c-com"> * -------------------------------------------------</span>
+<span class="c-com"> * Modes: MENU / MANUAL / SWEEP / CENTER / SETTINGS</span>
+<span class="c-com"> * Controls a standard hobby servo (50 Hz) and shows the pulse width</span>
+<span class="c-com"> * in microseconds plus a gauge bar on a 128x64 SSD1306 OLED.</span>
+<span class="c-com"> *</span>
+<span class="c-com"> * ENCODER CHOICE:</span>
+<span class="c-com"> *   We use a CHANGE-interrupt on the encoder CLK pin, reading DT and using a</span>
+<span class="c-com"> *   timestamp debounce. This avoids an extra library and is rock-solid on the</span>
+<span class="c-com"> *   C3. (ESP32Encoder / PCNT was an alternative but this compiles cleanly with</span>
+<span class="c-com"> *   zero dependency risk.) One encoder detent == +/-1 degree.</span>
+<span class="c-com"> *</span>
+<span class="c-com"> * DEBUG NOTE:</span>
+<span class="c-com"> *   Serial is UART0 (GPIO1/3); the Super Mini does not expose it on USB.</span>
+<span class="c-com"> *   Serial.begin() is kept for completeness but do NOT rely on its output.</span>
+<span class="c-com"> *   All human-facing feedback is on the OLED.</span>
+<span class="c-com"> */</span>
+
+<span class="c-pre">#include</span> <span class="c-st">&lt;Arduino.h&gt;</span>
+<span class="c-pre">#include</span> <span class="c-st">&lt;Wire.h&gt;</span>
+<span class="c-pre">#include</span> <span class="c-st">&lt;Adafruit_GFX.h&gt;</span>
+<span class="c-pre">#include</span> <span class="c-st">&lt;Adafruit_SSD1306.h&gt;</span>
+<span class="c-pre">#include</span> <span class="c-st">&lt;ESP32Servo.h&gt;</span>
+<span class="c-pre">#include</span> <span class="c-st">&lt;Preferences.h&gt;</span>
+
+<span class="c-com">// ----------------------------- Pinout (3.3 V logic) -------------------------</span>
+<span class="c-mac">#define</span> OLED_SDA   6
+<span class="c-mac">#define</span> OLED_SCL   7
+<span class="c-mac">#define</span> SERVO_PIN  10
+<span class="c-mac">#define</span> ENC_CLK    4
+<span class="c-mac">#define</span> ENC_DT     5
+<span class="c-mac">#define</span> ENC_SW     20
+
+<span class="c-com">// ----------------------------- OLED object ----------------------------------</span>
+<span class="c-mac">#define</span> SCREEN_W 128
+<span class="c-mac">#define</span> SCREEN_H 64
+Adafruit_SSD1306 display(SCREEN_W, SCREEN_H, &Wire, -1);
+
+<span class="c-com">// ----------------------------- Servo ----------------------------------------</span>
+Servo servo;
+
+<span class="c-com">// ----------------------------- Settings (persisted) -------------------------</span>
+<span class="c-com">// The angle domain is fixed at 0..180 deg. The configurable limits (minUs/maxUs)</span>
+<span class="c-com">// define the pulse width delivered at 0 deg and 180 deg respectively. "center"</span>
+<span class="c-com">// is the angle held in CENTER mode. Everything is stored in Preferences.</span>
+Preferences prefs;
+<span class="c-ty">int</span> minUs       = 500;    <span class="c-com">// pulse width (us) at 0 deg</span>
+<span class="c-ty">int</span> maxUs       = 2500;   <span class="c-com">// pulse width (us) at 180 deg</span>
+<span class="c-ty">int</span> centerAngle = 90;     <span class="c-com">// angle held in CENTER mode</span>
+
+<span class="c-com">// Fixed angle domain.</span>
+<span class="c-kw">const</span> <span class="c-ty">int</span> minAng = 0;
+<span class="c-kw">const</span> <span class="c-ty">int</span> maxAng = 180;
+
+<span class="c-com">// ----------------------------- Encoder (interrupt based) --------------------</span>
+<span class="c-com">// Net detents since last poll: positive = CW, negative = CCW.</span>
+<span class="c-kw">volatile</span> <span class="c-ty">int</span>  encoderDelta = 0;
+<span class="c-kw">volatile</span> <span class="c-ty">unsigned</span> <span class="c-ty">long</span> lastEncMs = 0;
+<span class="c-kw">volatile</span> <span class="c-ty">bool</span> buttonFlag = false;
+<span class="c-kw">volatile</span> <span class="c-ty">unsigned</span> <span class="c-ty">long</span> lastBtnMs = 0;
+
+<span class="c-com">// ----------------------------- State machine --------------------------------</span>
+<span class="c-kw">enum</span> Mode { MENU, MANUAL, SWEEP, CENTER, SETTINGS };
+Mode mode = MENU;
+<span class="c-kw">const</span> <span class="c-ty">char</span>* modeNames[] = { <span class="c-st">"MENU"</span>, <span class="c-st">"MANUAL"</span>, <span class="c-st">"SWEEP"</span>, <span class="c-st">"CENTER"</span>, <span class="c-st">"SETTINGS"</span> };
+
+<span class="c-com">// MENU entries: MANUAL, SWEEP, CENTER, SETTINGS</span>
+<span class="c-ty">int</span> menuIndex = 0;
+<span class="c-kw">const</span> <span class="c-ty">int</span> MENU_COUNT = 4;
+
+<span class="c-com">// SETTINGS sub-fields: 0 = minUs, 1 = maxUs, 2 = center</span>
+<span class="c-ty">int</span> settingField = 0;
+<span class="c-kw">const</span> <span class="c-ty">int</span> SETTINGS_FIELDS = 3;
+
+<span class="c-com">// Live commanded angle (for display & drive).</span>
+<span class="c-ty">int</span> angle = 90;
+
+<span class="c-com">// ----------------------------- ISRs -----------------------------------------</span>
+<span class="c-ty">void</span> <span class="c-mac">IRAM_ATTR</span> encoderISR() {
+  <span class="c-ty">unsigned</span> <span class="c-ty">long</span> now = <span class="c-fn">millis</span>();
+  <span class="c-kw">if</span> (now - lastEncMs &lt; 5) <span class="c-kw">return</span>;     <span class="c-com">// 5 ms timestamp debounce</span>
+  lastEncMs = now;
+  <span class="c-ty">int</span> clk = <span class="c-fn">digitalRead</span>(ENC_CLK);
+  <span class="c-kw">if</span> (clk == <span class="c-mac">HIGH</span>) {                   <span class="c-com">// count on rising edge of CLK (1 / detent)</span>
+    <span class="c-ty">int</span> dt = <span class="c-fn">digitalRead</span>(ENC_DT);
+    encoderDelta += (dt == <span class="c-mac">LOW</span>) ? 1 : -1;   <span class="c-com">// CW vs CCW</span>
+  }
+}
+
+<span class="c-ty">void</span> <span class="c-mac">IRAM_ATTR</span> buttonISR() {
+  <span class="c-ty">unsigned</span> <span class="c-ty">long</span> now = <span class="c-fn">millis</span>();
+  <span class="c-kw">if</span> (now - lastBtnMs &lt; 50) <span class="c-kw">return</span>;    <span class="c-com">// 50 ms debounce</span>
+  lastBtnMs = now;
+  buttonFlag = <span class="c-mac">true</span>;
+}
+
+<span class="c-com">// ----------------------------- Helpers --------------------------------------</span>
+<span class="c-com">// Map an angle in [0..180] to its pulse width using the configured limits.</span>
+<span class="c-ty">int</span> <span class="c-fn">angleToUs</span>(<span class="c-ty">int</span> a) {
+  a = <span class="c-fn">constrain</span>(a, minAng, maxAng);
+  <span class="c-kw">return</span> (<span class="c-ty">int</span>)<span class="c-fn">map</span>((<span class="c-ty">long</span>)a, minAng, maxAng, minUs, maxUs);
+}
+
+<span class="c-com">// Triangular sweep: ~1.5 s per direction across 0..180 deg.</span>
+<span class="c-ty">int</span> <span class="c-fn">sweepAngle</span>() {
+  <span class="c-ty">unsigned</span> <span class="c-ty">long</span> half = 1500;
+  <span class="c-ty">unsigned</span> <span class="c-ty">long</span> t = <span class="c-fn">millis</span>();
+  <span class="c-ty">unsigned</span> <span class="c-ty">long</span> phase = t % (2 * half);
+  <span class="c-ty">int</span> a;
+  <span class="c-kw">if</span> (phase &lt; half) a = (<span class="c-ty">int</span>)<span class="c-fn">map</span>((<span class="c-ty">long</span>)phase, 0, (<span class="c-ty">long</span>)half, 0, 180);
+  <span class="c-kw">else</span>              a = (<span class="c-ty">int</span>)<span class="c-fn">map</span>((<span class="c-ty">long</span>)phase, (<span class="c-ty">long</span>)half, 2 * (<span class="c-ty">long</span>)half, 180, 0);
+  <span class="c-kw">return</span> <span class="c-fn">constrain</span>(a, 0, 180);
+}
+
+<span class="c-ty">void</span> <span class="c-fn">loadSettings</span>() {
+  prefs.<span class="c-fn">begin</span>(<span class="c-st">"servotester"</span>, <span class="c-mac">true</span>);   <span class="c-com">// read-only</span>
+  minUs       = prefs.<span class="c-fn">getUInt</span>(<span class="c-st">"minUs"</span>, 500);
+  maxUs       = prefs.<span class="c-fn">getUInt</span>(<span class="c-st">"maxUs"</span>, 2500);
+  centerAngle = prefs.<span class="c-fn">getUInt</span>(<span class="c-st">"center"</span>, 90);
+  prefs.<span class="c-fn">end</span>();
+  minUs = <span class="c-fn">constrain</span>(minUs, 400, 1500);
+  maxUs = <span class="c-fn">constrain</span>(maxUs, 1500, 2600);
+  centerAngle = <span class="c-fn">constrain</span>(centerAngle, 0, 180);
+}
+
+<span class="c-ty">void</span> <span class="c-fn">saveSettings</span>() {
+  prefs.<span class="c-fn">begin</span>(<span class="c-st">"servotester"</span>, <span class="c-mac">false</span>);  <span class="c-com">// read-write</span>
+  prefs.<span class="c-fn">putUInt</span>(<span class="c-st">"minUs"</span>, (<span class="c-ty">unsigned</span> <span class="c-ty">int</span>)minUs);
+  prefs.<span class="c-fn">putUInt</span>(<span class="c-st">"maxUs"</span>, (<span class="c-ty">unsigned</span> <span class="c-ty">int</span>)maxUs);
+  prefs.<span class="c-fn">putUInt</span>(<span class="c-st">"center"</span>, (<span class="c-ty">unsigned</span> <span class="c-ty">int</span>)centerAngle);
+  prefs.<span class="c-fn">end</span>();
+}
+
+<span class="c-com">// ----------------------------- Input handling -------------------------------</span>
+<span class="c-ty">void</span> <span class="c-fn">handleInput</span>() {
+  <span class="c-com">// Consume encoder detents (atomic read/clear).</span>
+  <span class="c-mac">noInterrupts</span>();
+  <span class="c-ty">int</span> d = encoderDelta;
+  encoderDelta = 0;
+  <span class="c-mac">interrupts</span>();
+
+  <span class="c-kw">if</span> (d != 0) {
+    <span class="c-kw">switch</span> (mode) {
+      <span class="c-kw">case</span> MENU:
+        menuIndex = <span class="c-fn">constrain</span>(menuIndex + d, 0, MENU_COUNT - 1);
+        <span class="c-kw">break</span>;
+      <span class="c-kw">case</span> MANUAL:
+        angle = <span class="c-fn">constrain</span>(angle + d, minAng, maxAng);
+        <span class="c-kw">break</span>;
+      <span class="c-kw">case</span> SETTINGS:
+        <span class="c-kw">if</span>      (settingField == 0)      minUs       = <span class="c-fn">constrain</span>(minUs + d * 10, 400, 1500);
+        <span class="c-kw">else if</span> (settingField == 1)      maxUs       = <span class="c-fn">constrain</span>(maxUs + d * 10, 1500, 2600);
+        <span class="c-kw">else</span>                        centerAngle = <span class="c-fn">constrain</span>(centerAngle + d, 0, 180);
+        <span class="c-kw">break</span>;
+      <span class="c-kw">default</span>:
+        <span class="c-kw">break</span>; <span class="c-com">// SWEEP / CENTER ignore the encoder</span>
+    }
+  }
+
+  <span class="c-com">// Consume button press (atomic read/clear).</span>
+  <span class="c-mac">noInterrupts</span>();
+  <span class="c-ty">bool</span> b = buttonFlag;
+  buttonFlag = false;
+  <span class="c-mac">interrupts</span>();
+
+  <span class="c-kw">if</span> (b) {
+    <span class="c-kw">switch</span> (mode) {
+      <span class="c-kw">case</span> MENU:
+        <span class="c-kw">if</span>      (menuIndex == 0) mode = MANUAL;
+        <span class="c-kw">else if</span> (menuIndex == 1) mode = SWEEP;
+        <span class="c-kw">else if</span> (menuIndex == 2) mode = CENTER;
+        <span class="c-kw">else if</span> (menuIndex == 3) { mode = SETTINGS; settingField = 0; }
+        <span class="c-kw">break</span>;
+      <span class="c-kw">case</span> MANUAL:
+      <span class="c-kw">case</span> SWEEP:
+      <span class="c-kw">case</span> CENTER:
+        mode = MENU;                 <span class="c-com">// press returns to the menu</span>
+        <span class="c-kw">break</span>;
+      <span class="c-kw">case</span> SETTINGS:
+        settingField++;
+        <span class="c-kw">if</span> (settingField &gt;= SETTINGS_FIELDS) {
+          <span class="c-fn">saveSettings</span>();           <span class="c-com">// leaving SETTINGS persists limits</span>
+          mode = MENU;
+        }
+        <span class="c-kw">break</span>;
+    }
+  }
+}
+
+<span class="c-com">// ----------------------------- Rendering -------------------------------------</span>
+<span class="c-ty">void</span> <span class="c-fn">drawGauge</span>(<span class="c-ty">int</span> ang) {
+  <span class="c-ty">int</span> x = 4, y = 56, w = SCREEN_W - 8, h = 6;
+  display.<span class="c-fn">drawRect</span>(x, y, w, h, WHITE);
+  <span class="c-ty">int</span> fill = <span class="c-fn">map</span>(<span class="c-fn">constrain</span>(ang, 0, 180), 0, 180, 0, w);
+  display.<span class="c-fn">fillRect</span>(x, y, fill, h, WHITE);
+}
+
+<span class="c-ty">void</span> <span class="c-fn">drawServo</span>(<span class="c-kw">const</span> <span class="c-ty">char</span>* label, <span class="c-ty">int</span> ang) {
+  display.<span class="c-fn">clearDisplay</span>();
+  display.<span class="c-fn">setTextSize</span>(1);
+  display.<span class="c-fn">setTextColor</span>(WHITE);
+  display.<span class="c-fn">setCursor</span>(0, 0);
+  display.<span class="c-fn">println</span>(label);
+
+  display.<span class="c-fn">setTextSize</span>(3);
+  display.<span class="c-fn">setCursor</span>(20, 16);
+  display.<span class="c-fn">print</span>(ang);
+
+  display.<span class="c-fn">setTextSize</span>(1);
+  display.<span class="c-fn">setCursor</span>(0, 46);
+  display.<span class="c-fn">print</span>(<span class="c-fn">angleToUs</span>(ang));
+  display.<span class="c-fn">print</span>(<span class="c-st">" us"</span>);
+
+  <span class="c-fn">drawGauge</span>(ang);
+  display.<span class="c-fn">display</span>();
+}
+
+<span class="c-ty">void</span> <span class="c-fn">drawMenu</span>() {
+  display.<span class="c-fn">clearDisplay</span>();
+  display.<span class="c-fn">setTextSize</span>(1);
+  display.<span class="c-fn">setTextColor</span>(WHITE);
+  display.<span class="c-fn">setCursor</span>(0, 0);
+  display.<span class="c-fn">println</span>(<span class="c-st">"MENU"</span>);
+
+  <span class="c-kw">const</span> <span class="c-ty">char</span>* items[] = { <span class="c-st">"MANUAL"</span>, <span class="c-st">"SWEEP"</span>, <span class="c-st">"CENTER"</span>, <span class="c-st">"SETTINGS"</span> };
+  <span class="c-kw">for</span> (<span class="c-ty">int</span> i = 0; i &lt; MENU_COUNT; i++) {
+    display.<span class="c-fn">setCursor</span>(0, 14 + i * 10);
+    display.<span class="c-fn">print</span>(i == menuIndex ? <span class="c-st">"&gt; "</span> : <span class="c-st">"  "</span>);
+    display.<span class="c-fn">println</span>(items[i]);
+  }
+  display.<span class="c-fn">display</span>();
+}
+
+<span class="c-ty">void</span> <span class="c-fn">drawSettings</span>() {
+  display.<span class="c-fn">clearDisplay</span>();
+  display.<span class="c-fn">setTextSize</span>(1);
+  display.<span class="c-fn">setTextColor</span>(WHITE);
+  display.<span class="c-fn">setCursor</span>(0, 0);
+  display.<span class="c-fn">println</span>(<span class="c-st">"SETTINGS"</span>);
+
+  display.<span class="c-fn">print</span>(settingField == 0 ? <span class="c-st">" &gt;"</span> : <span class="c-st">"  "</span>);
+  display.<span class="c-fn">print</span>(<span class="c-st">"minUs : "</span>); display.<span class="c-fn">println</span>(minUs);
+  display.<span class="c-fn">print</span>(settingField == 1 ? <span class="c-st">" &gt;"</span> : <span class="c-st">"  "</span>);
+  display.<span class="c-fn">print</span>(<span class="c-st">"maxUs : "</span>); display.<span class="c-fn">println</span>(maxUs);
+  display.<span class="c-fn">print</span>(settingField == 2 ? <span class="c-st">" &gt;"</span> : <span class="c-st">"  "</span>);
+  display.<span class="c-fn">print</span>(<span class="c-st">"center: "</span>); display.<span class="c-fn">println</span>(centerAngle);
+
+  display.<span class="c-fn">setCursor</span>(0, 54);
+  display.<span class="c-fn">println</span>(<span class="c-st">"SW=next  turn=edit"</span>);
+  display.<span class="c-fn">display</span>();
+}
+
+<span class="c-com">// ----------------------------- Setup -----------------------------------------</span>
+<span class="c-ty">void</span> <span class="c-fn">setup</span>() {
+  <span class="c-fn">Serial</span>.<span class="c-fn">begin</span>(115200);                 <span class="c-com">// UART0 only; NOT visible over USB</span>
+
+  Wire.<span class="c-fn">begin</span>(OLED_SDA, OLED_SCL);
+  <span class="c-kw">if</span> (!display.<span class="c-fn">begin</span>(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    <span class="c-com">// No OLED: stop here so the fault is obvious on the bench.</span>
+    <span class="c-kw">while</span> (<span class="c-mac">true</span>) { <span class="c-fn">delay</span>(1000); }
+  }
+  display.<span class="c-fn">clearDisplay</span>();
+  display.<span class="c-fn">display</span>();
+
+  <span class="c-fn">loadSettings</span>();
+  servo.<span class="c-fn">attach</span>(SERVO_PIN, minUs, maxUs);
+
+  <span class="c-fn">pinMode</span>(ENC_CLK, INPUT_PULLUP);
+  <span class="c-fn">pinMode</span>(ENC_DT,  INPUT_PULLUP);
+  <span class="c-fn">pinMode</span>(ENC_SW,  INPUT_PULLUP);
+  <span class="c-fn">attachInterrupt</span>(<span class="c-fn">digitalPinToInterrupt</span>(ENC_CLK), encoderISR, CHANGE);
+  <span class="c-fn">attachInterrupt</span>(<span class="c-fn">digitalPinToInterrupt</span>(ENC_SW),  buttonISR, FALLING);
+
+  <span class="c-com">// Optional: enable the hardware watchdog (left disabled/commented).</span>
+  <span class="c-com">// esp_task_wdt_init(5, true); // 5 s timeout, panic on breach</span>
+}
+
+<span class="c-com">// ----------------------------- Loop ------------------------------------------</span>
+<span class="c-ty">void</span> <span class="c-fn">loop</span>() {
+  <span class="c-fn">handleInput</span>();
+
+  <span class="c-ty">int</span> driveAngle = angle;
+  <span class="c-kw">switch</span> (mode) {
+    <span class="c-kw">case</span> MANUAL:   driveAngle = angle;       <span class="c-kw">break</span>;
+    <span class="c-kw">case</span> CENTER:   driveAngle = centerAngle; angle = centerAngle; <span class="c-kw">break</span>;
+    <span class="c-kw">case</span> SWEEP:    driveAngle = <span class="c-fn">sweepAngle</span>(); angle = driveAngle; <span class="c-kw">break</span>;
+    <span class="c-kw">case</span> SETTINGS: driveAngle = angle;       <span class="c-kw">break</span>;
+    <span class="c-kw">case</span> MENU:     driveAngle = -1;          <span class="c-kw">break</span>; <span class="c-com">// servo holds last position</span>
+  }
+
+  <span class="c-kw">if</span> (mode != MENU) {
+    servo.<span class="c-fn">writeMicroseconds</span>(<span class="c-fn">angleToUs</span>(driveAngle));
+  }
+
+  <span class="c-kw">switch</span> (mode) {
+    <span class="c-kw">case</span> MENU:    <span class="c-fn">drawMenu</span>();                       <span class="c-kw">break</span>;
+    <span class="c-kw">case</span> MANUAL:  <span class="c-fn">drawServo</span>(<span class="c-st">"MANUAL"</span>, angle);       <span class="c-kw">break</span>;
+    <span class="c-kw">case</span> SWEEP:   <span class="c-fn">drawServo</span>(<span class="c-st">"SWEEP"</span>, <span class="c-fn">sweepAngle</span>());  <span class="c-kw">break</span>;
+    <span class="c-kw">case</span> CENTER:  <span class="c-fn">drawServo</span>(<span class="c-st">"CENTER"</span>, centerAngle);  <span class="c-kw">break</span>;
+    <span class="c-kw">case</span> SETTINGS: <span class="c-fn">drawSettings</span>();                  <span class="c-kw">break</span>;
+  }
+
+  <span class="c-fn">delay</span>(20); <span class="c-com">// ~50 Hz UI refresh, leaves headroom for servo timing</span>
+}</code></pre>
+        </details>
+      </div>
+    </section>
+    <!-- 8. CALIB -->
+    <section id="calib">
+      <h2><span class="num">8</span> Calibración de límites</h2>
+      <p class="lead">Cómo ajustar minUs/maxUs y por qué importa de verdad.</p>
+      <div class="card">
+        <h3>8.1 Procedimiento paso a paso</h3>
+        <ol>
+          <li>Entra en <strong>SETTINGS</strong> desde el MENU (gira hasta marcar SETTINGS, pulsa SW).</li>
+          <li>Selecciona <code>minUs</code> y gira hasta el valor donde el servo <strong>empieza</strong> a moverse desde su tope mecánico (típico 500&nbsp;µs). No fuerces más allá del tope: el servo calentará y consumirá de más.</li>
+          <li>Pulsa SW, selecciona <code>maxUs</code> y ajusta al otro tope (típico 2500&nbsp;µs).</li>
+          <li>Pulsa SW, fija <code>center</code> (normalmente 90°) y pulsa SW de nuevo para <strong>guardar</strong>.</li>
+          <li>Los valores persisten tras reiniciar (Preferences, claves <code>minUs</code>/<code>maxUs</code>/<code>center</code>).</li>
+        </ol>
+        <div class="callout warn"><b>Importancia:</b> estos límites definen el ancho de pulso entregado en 0° y 180°, respectivamente. Si tu servo real sólo recorre entre 1000 y 2000&nbsp;µs, dejar 500/2500 hará que el tester "pida" posiciones que el servo no alcanza (el ángulo no llega a 180° o se atasca en el tope). Calibrar los acerca al recorrido real y evita saturar el motor.</div>
+        <div class="callout info">El guardado sólo ocurre al salir de SETTINGS (tras editar el tercer campo). Si cortas la alimentación a mitad de la edición, los cambios no se escriben.</div>
+      </div>
+    </section>
+
+    <!-- 9. TROUBLE -->
+    <section id="trouble">
+      <h2><span class="num">9</span> Solución de problemas</h2>
+      <p class="lead">Síntoma → causa → solución.</p>
+      <div class="card">
+        <table>
+          <thead>
+            <tr><th>Síntoma</th><th>Causa probable</th><th>Solución</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>OLED en blanco</td><td>OLED mal cableada o dirección distinta</td><td>Revisa SDA/SCL y GND; confirma 0x3C. Algunas OLED vienen en 0x3D: cambia <code>0x3C</code> en <code>display.begin()</code>.</td></tr>
+            <tr><td>El servo no se mueve</td><td>Sin masa común o fuente 5&nbsp;V ausente</td><td>Une GND de todo; alimenta el servo por separado con ≥1&nbsp;A.</td></tr>
+            <tr><td>Servo tiembla / garra</td><td>Fuente 5&nbsp;V insuficiente o ruido en GND</td><td>Usa fuente con más corriente; une bien el GND común y evita cables largos finos.</td></tr>
+            <tr><td>El encoder salta pasos</td><td>Rebote mecánico o giro muy rápido</td><td>Ya hay debounce de 5&nbsp;ms; reduce velocidad de giro. Si persiste, sube a 10–15&nbsp;ms en <code>encoderISR()</code>.</td></tr>
+            <tr><td>No veo Serial por USB</td><td>Es UART0 (GPIO1/3), no USB</td><td>Esperado: mira la OLED (ver apartado <a href="#usbcdc">10</a>). No busques salida por el monitor serie.</td></tr>
+            <tr><td>El ángulo no llega a 180°</td><td>Límites mal calibrados o servo estándar limitado</td><td>Calibra <code>minUs</code>/<code>maxUs</code> (apartado 8). Muchos servos no cubren 500–2500&nbsp;µs realmente.</td></tr>
+            <tr><td>Error de compilación con <code>Serial</code></td><td>Flag <code>ARDUINO_USB_CDC_ON_BOOT</code> activado</td><td>No se usa en este proyecto a propósito (ver apartado 10).</td></tr>
+            <tr><td>Placa no aparece en /dev</td><td>Puerto o permisos</td><td>En Linux añade el usuario al grupo <code>dialout</code>; usa <code>/dev/ttyACM0</code> (esptool por USB nativo).</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 10. USB-CDC -->
+    <section id="usbcdc">
+      <h2><span class="num">10</span> Callout de SEGURIDAD / trampa USB-CDC</h2>
+      <p class="lead">El gotcha que rompe la compilación y confunde a quienes esperan un monitor serie.</p>
+      <div class="callout danger">
+        <b>El core framework-arduinoespressif32 7.0.1 NO incluye <code>usb_serial.h</code> para el C3.</b>
+        Por eso este proyecto <b>NO</b> usa <code>ARDUINO_USB_CDC_ON_BOOT=1</code>: ese flag rompe la compilación con <code>"'Serial' was not declared"</code>.
+      </div>
+      <div class="card">
+        <p>Consecuencias prácticas que debes internalizar antes de depurar:</p>
+        <ul>
+          <li><code>Serial</code> cae a <strong>UART0</strong> (GPIO1/3), que la Super Mini <strong>no</strong> conecta al conector USB. No verás nada en el monitor serie USB.</li>
+          <li>El <code>platformio.ini</code> <strong>no</strong> pone el flag <code>build_flags = -D ARDUINO_USB_CDC_ON_BOOT=1</code> a propósito.</li>
+          <li>Toda la depuración y feedback se hace por la <strong>OLED</strong>, no por el monitor serie USB.</li>
+          <li>La carga del firmware sí funciona por USB nativo con <code>esptool</code> (<code>/dev/ttyACM0</code>), sin necesidad de pulsar BOOT.</li>
+        </ul>
+        <div class="callout warn">Si alguna guía te dice "activa USB CDC para ver Serial", <b>no lo hagas aquí</b>: el core 7.0.1 del C3 no lo soporta y el build fallará. Mantén el debug en la pantalla.</div>
+      </div>
+    </section>
+
+    <!-- 11. BUILD -->
+    <section id="build">
+      <h2><span class="num">11</span> Cómo compilar y cargar</h2>
+      <p class="lead">Comandos de PlatformIO y notas del entorno.</p>
+      <div class="card">
+        <p>Desde el directorio del proyecto (<code>servo-tester/nivel1</code>):</p>
+        <pre><code><span class="c-com"># Compilar (descarga las librerías automáticamente si hay red)</span>
+pio run
+
+<span class="c-com"># Cargar por USB nativo (esptool, /dev/ttyACM0; sin botón BOOT)</span>
+pio run -t upload
+
+<span class="c-com"># Monitor serie — sólo UART0, NO visible por USB (no esperes salida)</span>
+pio device monitor</code></pre>
+        <div class="callout info">
+          <b>Nota de <code>platformio.ini</code>:</b> <code>board_build.flash_mode = dio</code> está fijado porque la Super Mini usa flash en modo DIO; si lo cambias a QIO la placa puede no arrancar. <code>upload_speed = 921600</code> acelera la carga.
+        </div>
+        <table>
+          <thead><tr><th>Clave en platformio.ini</th><th>Valor</th><th>Para qué</th></tr></thead>
+          <tbody>
+            <tr><td><code>board</code></td><td><code>esp32-c3-devkitm-1</code></td><td>Perfil base del C3 (válido para la Super Mini).</td></tr>
+            <tr><td><code>framework</code></td><td><code>arduino</code></td><td>Core Arduino 7.0.1.</td></tr>
+            <tr><td><code>monitor_speed</code></td><td><code>115200</code></td><td>Velocidad de UART0 si abres <code>pio device monitor</code>.</td></tr>
+            <tr><td><code>upload_speed</code></td><td><code>921600</code></td><td>Velocidad de flasheo por esptool.</td></tr>
+            <tr><td><code>board_build.flash_mode</code></td><td><code>dio</code></td><td>Modo de flash obligado para esta placa.</td></tr>
+            <tr><td><code>lib_deps</code></td><td>Adafruit SSD1306, Adafruit GFX, ESP32Servo</td><td>Dependencias del proyecto.</td></tr>
+          </tbody>
+        </table>
+        <div class="callout ok"><b>No hace falta subir para compilar.</b> <code>pio run</code> basta para verificar el firmware; la carga la hace el operador con <code>pio run -t upload</code>.</div>
+      </div>
+    </section>
+
+    <!-- 12. FAQ -->
+    <section id="faq">
+      <h2><span class="num">12</span> Preguntas frecuentes (FAQ)</h2>
+      <div class="card">
+        <h4>¿Puedo usar un servo de 6&nbsp;V?</h4>
+        <p>Sí, pero la <em>señal</em> sigue a 3.3&nbsp;V (válida) y el <em>VCC</em> del servo debe venir de esa fuente de 6&nbsp;V, con GND común. No lo alimentes del 3V3 de la placa.</p>
+
+        <h4>¿Por qué el servo no se mueve al entrar en MENU?</h4>
+        <p>Es intencional: en MENU <code>driveAngle = -1</code> y no se escribe el servo, así que <strong>mantiene la última posición</strong>. Entra en MANUAL/SWEEP/CENTER para moverlo.</p>
+
+        <h4>¿Se pierden los ajustes al desconectar?</h4>
+        <p>No. <code>Preferences</code> escribe en la flash (NVS) del ESP32-C3; sobrevive a reinicios y cortes de alimentación.</p>
+
+        <h4>¿Puedo cambiar los pines?</h4>
+        <p>Sí: edita los <code>#define</code> (OLED_SDA, OLED_SCL, SERVO_PIN, ENC_CLK, ENC_DT, ENC_SW) en <code>main.cpp</code>. El <code>platformio.ini</code> no necesita cambios.</p>
+
+        <h4>¿El encoder funciona sin librería?</h4>
+        <p>Sí. Se usa una interrupción CHANGE en CLK + lectura de DT con debounce por marca de tiempo. Es deliberado para evitar dependencias (ESP32Encoder/PCNT) y compilar limpio.</p>
+
+        <h4>¿Por qué no veo nada en el monitor serie?</h4>
+        <p>Por el gotcha USB-CDC (apartado 10): <code>Serial</code> es UART0, no USB. Toda la info está en la OLED.</p>
+
+        <h4>¿El SWEEP es de 0 a 180 exactos?</h4>
+        <p>Sí, la rampa triangular de <code>sweepAngle()</code> recorre 0→180→0 en ~3&nbsp;s total (1.5&nbsp;s por dirección), usando <code>millis()</code>.</p>
+
+        <h4>¿Puedo añadir más modos?</h4>
+        <p>Sí: añade un valor al <code>enum Mode</code>, un caso en <code>handleInput()</code> y su rutina de dibujo. El patrón está aislado y es fácil de extender.</p>
+      </div>
+    </section>
+
+    <p class="footer-note">Servo Tester Nivel 1 · ESP32-C3 Super Mini · Manual generado a partir de README.md, src/main.cpp y platformio.ini.</p>
+  </main>
+</div>
+
+<script>
+  // Scroll-spy: resalta el enlace del TOC según la sección visible.
+  (function () {
+    var links = Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+    var sections = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+    function onScroll() {
+      var pos = window.scrollY + 120;
+      var current = 0;
+      for (var i = 0; i < sections.length; i++) {
+        if (sections[i] && sections[i].offsetTop <= pos) current = i;
+      }
+      links.forEach(function (l, i) { l.classList.toggle('active', i === current); });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  })();
+</script>
+</body>
+</html>

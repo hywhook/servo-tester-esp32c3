@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Servo Tester Nivel 2 — ESP32-C3 Super Mini (con analizador)</title>
+<style>
+  :root {
+    --bg: #f6f8fb;
+    --bg-card: #ffffff;
+    --bg-soft: #eef2f7;
+    --ink: #1c2430;
+    --ink-soft: #51607a;
+    --border: #d8e0ec;
+    --accent: #2563eb;
+    --accent-soft: #dbeafe;
+    --info: #2563eb;
+    --info-bg: #e8f0fe;
+    --warn: #d97706;
+    --warn-bg: #fef3c7;
+    --danger: #dc2626;
+    --danger-bg: #fee2e2;
+    --ok: #16a34a;
+    --ok-bg: #dcfce7;
+    --code-bg: #0f172a;
+    --code-ink: #e2e8f0;
+    --shade-3v3: #f59e0b;
+    --shade-gnd: #475569;
+    --shade-sda: #10b981;
+    --shade-scl: #059669;
+    --shade-sig: #ef4444;
+    --shade-enc: #8b5cf6;
+    --shade-vs: #0ea5e9;
+    --shade-ina: #ec4899;
+    --shade-buzz: #f97316;
+    --shadow: 0 1px 3px rgba(16,24,40,.08), 0 8px 24px rgba(16,24,40,.06);
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.6;
+    font-size: 16px;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { display: flex; gap: 28px; max-width: 1280px; margin: 0 auto; padding: 0 20px; }
+  .toc { position: sticky; top: 0; align-self: flex-start; width: 260px; flex: 0 0 260px; height: 100vh; overflow-y: auto; padding: 28px 12px 40px 0; }
+  .toc h3 { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 10px 8px; }
+  .toc ol { list-style: none; margin: 0; padding: 0; }
+  .toc li { margin: 0; }
+  .toc a { display: block; padding: 7px 12px; border-radius: 8px; color: var(--ink-soft); font-size: 14px; border-left: 3px solid transparent; }
+  .toc a:hover { background: var(--bg-soft); text-decoration: none; }
+  .toc a.active { background: var(--accent-soft); color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+  .toc ol ol { margin-left: 10px; }
+  .toc ol ol a { font-size: 13px; }
+  .content { flex: 1 1 auto; min-width: 0; padding: 28px 0 80px; }
+  .hero { background: linear-gradient(135deg, #1e293b 0%, #2563eb 100%); color: #fff; border-radius: var(--radius); padding: 40px 36px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .hero::after { content: ""; position: absolute; right: -60px; top: -60px; width: 240px; height: 240px; background: radial-gradient(circle, rgba(255,255,255,.18), transparent 70%); border-radius: 50%; }
+  .hero h1 { margin: 0 0 8px; font-size: 30px; line-height: 1.2; }
+  .hero p { margin: 0; font-size: 17px; opacity: .92; max-width: 640px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+  .badge { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.25); padding: 6px 13px; border-radius: 999px; font-size: 13px; font-weight: 600; backdrop-filter: blur(4px); }
+  .badge b { color: #fde68a; }
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px 30px; margin: 22px 0; box-shadow: var(--shadow); }
+  section { scroll-margin-top: 16px; }
+  h2 { font-size: 23px; margin: 4px 0 16px; padding-bottom: 10px; border-bottom: 2px solid var(--bg-soft); }
+  h3 { font-size: 18px; margin: 22px 0 10px; color: #1f2a3a; }
+  h4 { font-size: 15px; margin: 16px 0 8px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .04em; }
+  p { margin: 10px 0; }
+  ul, ol { padding-left: 22px; }
+  li { margin: 5px 0; }
+  code { background: var(--bg-soft); padding: 2px 6px; border-radius: 5px; font-size: 13.5px; font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; color: #b4243a; }
+  strong { color: #14213d; }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14.5px; }
+  caption { text-align: left; font-weight: 700; color: var(--ink-soft); margin-bottom: 8px; font-size: 14px; }
+  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+  thead th { background: var(--accent); color: #fff; font-weight: 600; }
+  thead th:first-child { border-top-left-radius: 8px; }
+  thead th:last-child { border-top-right-radius: 8px; }
+  tbody tr:nth-child(even) { background: var(--bg-soft); }
+  tbody tr:hover { background: var(--accent-soft); }
+  .callout { border-radius: 10px; padding: 14px 18px 14px 16px; margin: 16px 0; border-left: 5px solid; display: flex; gap: 12px; align-items: flex-start; }
+  .callout .ico { font-size: 18px; line-height: 1.4; flex: 0 0 auto; }
+  .callout .body { flex: 1 1 auto; }
+  .callout .body p { margin: 4px 0; }
+  .callout.info { background: var(--info-bg); border-color: var(--info); }
+  .callout.warn { background: var(--warn-bg); border-color: var(--warn); }
+  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
+  .callout.ok { background: var(--ok-bg); border-color: var(--ok); }
+  .callout b { color: inherit; }
+  pre { background: var(--code-bg); color: var(--code-ink); padding: 18px 20px; border-radius: 10px; overflow-x: auto; font-size: 13px; line-height: 1.55; margin: 14px 0; font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+  pre code { background: none; color: inherit; padding: 0; }
+  .tk-com { color: #7dd3fc; font-style: italic; }
+  .tk-key { color: #fca5a5; }
+  .tk-str { color: #fcd34d; }
+  .tk-num { color: #86efac; }
+  .tk-pre { color: #c4b5fd; }
+  .tk-fn  { color: #93c5fd; }
+  details { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; margin: 14px 0; }
+  details > summary { cursor: pointer; padding: 12px 16px; font-weight: 600; color: var(--accent); }
+  details[open] > summary { border-bottom: 1px solid var(--border); }
+  details pre { border-radius: 0 0 10px 10px; margin: 0; }
+  .pin-sig { font-weight: 700; }
+  .s-3v3 { color: var(--shade-3v3); } .bg-3v3 { background: #fff7e6; }
+  .s-gnd { color: var(--shade-gnd); } .bg-gnd { background: #eef2f7; }
+  .s-sda { color: var(--shade-sda); } .bg-sda { background: #e7f9f1; }
+  .s-scl { color: var(--shade-scl); } .bg-scl { background: #e6f7f1; }
+  .s-sig { color: var(--shade-sig); } .bg-sig { background: #fdebec; }
+  .s-enc { color: var(--shade-enc); } .bg-enc { background: #f3eefe; }
+  .s-vs  { color: var(--shade-vs); } .bg-vs  { background: #e8f7fe; }
+  .s-ina { color: var(--shade-ina); } .bg-ina { background: #fdeaf4; }
+  .s-buzz{ color: var(--shade-buzz);} .bg-buzz{ background: #fff2e6; }
+  .diagram { background: #0b1220; border-radius: 12px; padding: 22px; color: #cbd5e1; overflow-x: auto; }
+  .diagram svg { width: 100%; height: auto; min-width: 760px; display: block; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 14px 0 4px; font-size: 13px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 18px; height: 4px; border-radius: 3px; display: inline-block; }
+  .wirecol-3v3 { background: var(--shade-3v3); }
+  .wirecol-gnd { background: var(--shade-gnd); }
+  .wirecol-sda { background: var(--shade-sda); }
+  .wirecol-scl { background: var(--shade-scl); }
+  .wirecol-sig { background: var(--shade-sig); }
+  .wirecol-enc { background: var(--shade-enc); }
+  .wirecol-vs  { background: var(--shade-vs); }
+  .wirecol-ina { background: var(--shade-ina); }
+  .wirecol-buzz{ background: var(--shade-buzz); }
+  .chip { fill: #1e293b; stroke: #475569; stroke-width: 1.5; }
+  .chip-label { fill: #e2e8f0; font-size: 12px; font-weight: 700; font-family: monospace; }
+  .pin-label { fill: #94a3b8; font-size: 10.5px; font-family: monospace; }
+  .wire { fill: none; stroke-width: 3; stroke-linecap: round; }
+  .series-tag { fill: #fda4c0; font-size: 11px; font-weight: 700; font-family: monospace; }
+  .oled { background: #0a0f04; border: 3px solid #1f3d1f; border-radius: 8px; width: 230px; height: 116px; padding: 8px; color: #9effa0; font-family: monospace; }
+  .oled .l1 { display: flex; justify-content: space-between; font-size: 12px; }
+  .oled .big { font-size: 34px; line-height: 1; text-align: center; margin: 2px 0; }
+  .oled .us { font-size: 11px; text-align: center; }
+  .oled .tel { font-size: 11px; text-align: center; }
+  .oled .bar { height: 8px; border: 1px solid #9effa0; border-radius: 3px; margin-top: 6px; }
+  .oled .bar i { display: block; height: 100%; background: #9effa0; width: 50%; }
+  footer { text-align: center; color: var(--ink-soft); font-size: 13px; margin: 40px 0 0; }
+  .steps { counter-reset: step; list-style: none; padding-left: 0; }
+  .steps li { position: relative; padding: 8px 8px 8px 42px; margin: 8px 0; background: var(--bg-soft); border-radius: 8px; }
+  .steps li::before { counter-increment: step; content: counter(step); position: absolute; left: 10px; top: 8px; width: 22px; height: 22px; background: var(--accent); color: #fff; border-radius: 50%; text-align: center; font-weight: 700; font-size: 13px; line-height: 22px; }
+  @media (max-width: 920px) {
+    .wrap { flex-direction: column; }
+    .toc { position: static; width: 100%; height: auto; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .toc ol { display: flex; flex-wrap: wrap; gap: 6px; }
+    .toc a { border-left: none; border: 1px solid var(--border); }
+    .toc ol ol { display: none; }
+  }
+  @media print { .toc { display: none; } .card, .hero { box-shadow: none; } body { background: #fff; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- ===================== TOC ===================== -->
+  <nav class="toc" id="toc">
+    <h3>Índice</h3>
+    <ol>
+      <li><a href="#intro">1. Introducción</a></li>
+      <li><a href="#bom">2. Lista de materiales</a></li>
+      <li><a href="#teoria">3. Teoría</a>
+        <ol>
+          <li><a href="#t-servo">3.1 Servo &amp; PWM 50 Hz</a></li>
+          <li><a href="#t-ledc">3.2 LEDC / 3.3 V</a></li>
+          <li><a href="#t-fuente">3.3 Fuente 5 V externa</a></li>
+          <li><a href="#t-encoder">3.4 Encoder cuadratura</a></li>
+          <li><a href="#t-divisor">3.5 Divisor de tensión</a></li>
+          <li><a href="#t-ina219">3.6 Sensor INA219</a></li>
+          <li><a href="#t-diagnostico">3.7 V/I diagnóstico</a></li>
+        </ol>
+      </li>
+      <li><a href="#pinout">4. Pinout completo</a></li>
+      <li><a href="#diagrama">5. Diagrama de conexión</a></li>
+      <li><a href="#modos">6. Modos y telemetría</a></li>
+      <li><a href="#codigo">7. Recorrido del código</a></li>
+      <li><a href="#fuente-codigo">8. Código fuente completo</a></li>
+      <li><a href="#calibracion">9. Calibración</a></li>
+      <li><a href="#trouble">10. Solución de problemas</a></li>
+      <li><a href="#seguridad">11. Seguridad / USB-CDC</a></li>
+      <li><a href="#compilar">12. Compilar y cargar</a></li>
+      <li><a href="#faq">13. FAQ</a></li>
+    </ol>
+  </nav>
+
+  <!-- ===================== CONTENT ===================== -->
+  <main class="content">
+
+    <!-- HERO -->
+    <header class="hero">
+      <h1>Servo Tester Nivel 2</h1>
+      <p>Probador y <b>analizador eléctrico</b> de servos de hobby para ESP32-C3 Super Mini: mueve el servo y, además, mide en vivo tensión, corriente y potencia con alarma de sobrecorriente y bajo voltaje.</p>
+      <div class="badges">
+        <span class="badge">Nivel <b>2</b></span>
+        <span class="badge">MCU <b>ESP32-C3 Super Mini</b></span>
+        <span class="badge">Framework <b>Arduino / PlatformIO</b></span>
+        <span class="badge">Flash <b>~24.4%</b></span>
+        <span class="badge">Core <b>arduinoespressif32 7.0.1</b></span>
+      </div>
+    </header>
+
+    <!-- 1. INTRO -->
+    <section id="intro" class="card">
+      <h2>1. Introducción</h2>
+      <p>El <strong>Nivel 2</strong> es la evolución del Nivel 1. Mantiene toda la lógica de control (menú navegable con encoder, modos manual / barrido / centro / ajustes sobre una pantalla OLED SSD1306) y le suma un <strong>analizador eléctrico</strong>:</p>
+      <ul>
+        <li><span class="pin-sig s-vs">Tensión de alimentación del servo (V)</span> mediante un divisor resistivo 10k/10k sobre el rail de 5 V, leída por el ADC de 12 bits del C3 (GPIO3).</li>
+        <li><span class="pin-sig s-ina">Corriente (I, en mA) y potencia (W)</span> del servo mediante un INA219 conectado <strong>en serie</strong> con la línea de 5 V.</li>
+        <li><span class="pin-sig s-buzz">Alarma</span>: si la corriente supera un umbral configurable (800 mA por defecto) o la tensión baja de 4.5 V, la OLED muestra <strong>“ALARMA”</strong> y suena el zumbador piezo.</li>
+      </ul>
+      <p>Así puedes <strong>detectar un servo atascado, sin torque o muerto</strong>, y saber si tu fuente de 5 V es suficiente, todo antes de quemar la placa, el servo o la fuente.</p>
+      <div class="callout info">
+        <div class="ico">ℹ️</div>
+        <div class="body">
+          <p><b>Control 100% por encoder.</b> Todo el control se hace con un encoder rotatorio con pulsador (HW-040 / KY-040). El servo se alimenta <b>siempre</b> desde una fuente externa de 5 V, compartiendo <b>masa (GND) común</b> con la placa. La lógica de la placa y del encoder es de 3.3 V.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. BOM -->
+    <section id="bom" class="card">
+      <h2>2. Lista de materiales (BOM)</h2>
+      <table>
+        <caption>Componentes necesarios para recrear el probador Nivel 2</caption>
+        <thead>
+          <tr><th>Cant.</th><th>Componente</th><th>Notas / especificación</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>ESP32-C3 Super Mini</td><td>Placa de desarrollo. Ojo: el USB no expone UART0 (ver §11).</td></tr>
+          <tr><td>1</td><td>OLED SSD1306 128×64 I²C</td><td>Dirección 0x3C. Alimentada a 3.3 V.</td></tr>
+          <tr><td>1</td><td>Servo de hobby (50 Hz)</td><td>p. ej. SG90, MG996R, MG90S. Estándar o micro.</td></tr>
+          <tr><td>1</td><td>Encoder rotatorio HW-040 (KY-040)</td><td>Líneas CLK / DT / SW.</td></tr>
+          <tr><td>1</td><td>Sensor de corriente INA219</td><td>I²C, dirección 0x40. Se cablea <b>en serie</b> con el 5 V del servo.</td></tr>
+          <tr><td>2</td><td>Resistencia 10 kΩ</td><td>Para el divisor de tensión 10k/10k (tolerancia 1% recomendada).</td></tr>
+          <tr><td>1</td><td>Zumbador piezoeléctrico (activo)</td><td>Activo a nivel alto, 3.3 V tolerante. GPIO21.</td></tr>
+          <tr><td>1</td><td>Fuente de 5 V externa</td><td>≥1 A recomendado (el INA219 la mide en serie).</td></tr>
+          <tr><td>–</td><td>Cables Dupont, protoboard</td><td>Para el montaje.</td></tr>
+          <tr><td>–</td><td>Cable USB-C (datos)</td><td>Para programar la placa vía esptool.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 3. THEORY -->
+    <section id="teoria" class="card">
+      <h2>3. Teoría (todo lo del Nivel 1 + analizador)</h2>
+
+      <h3 id="t-servo">3.1 El servo de hobby y el PWM a 50 Hz</h3>
+      <p>Un servo de hobby posiciona su eje según la <strong>anchura del pulso</strong> de una señal PWM que recibe por su línea de señal (cable naranja/amarillo). El estándar es:</p>
+      <ul>
+        <li><b>Frecuencia:</b> 50 Hz → periodo de <strong>20 ms</strong>.</li>
+        <li><b>Pulso útil:</b> entre <strong>500 µs</strong> (típico 0°) y <strong>2500 µs</strong> (típico 180°), con el centro ~<strong>1500 µs</strong> (90°).</li>
+        <li>Fuera de ese rango el servo puede saturar o no moverse; por eso el firmware permite calibrar <code>minUs</code> / <code>maxUs</code> (§9).</li>
+      </ul>
+      <div class="callout info">
+        <div class="ico">📐</div>
+        <div class="body"><p><b>Mapeo lineal.</b> El firmware hace <code>us = map(angulo, 0, 180, minUs, maxUs)</code>. Un ángulo intermedio produce un pulso proporcional. El servo internamente compara el pulso con un potenciómetro y acciona el motor hasta igualar la posición.</p></div>
+      </div>
+
+      <h3 id="t-ledc">3.2 LEDC y el nivel 3.3 V de la ESP32-C3</h3>
+      <p>La ESP32-C3 Super Mini es un MCU de <strong>3.3 V</strong>. La biblioteca <code>ESP32Servo</code> usa el periférico <strong>LEDC</strong> (LED PWM Controller) para generar la señal de 50 Hz con resolución fina de microsegundos, sin bloquear el <code>loop()</code>. La línea de señal del servo se alimenta a 3.3 V, que es válido: la mayoría de los servos de hobby interpretan 3.3 V como “alto” lógico sin problema (el pulso es solo información de posición, no potencia).</p>
+      <p>La <strong>potencia</strong> del servo (la que mueve el motor) NO viene de la placa: viene de la fuente de 5 V externa. La placa solo entrega la señal de control.</p>
+
+      <h3 id="t-fuente">3.3 Fuente de 5 V externa (¡crítico!)</h3>
+      <p>Un servo puede consumir desde unas decenas de mA en reposo hasta <strong>varios cientos de mA o más de 1 A</strong> bajo carga. La placa ESP32-C3 no puede (ni debe) alimentarlo desde su regulador. Por eso:</p>
+      <ul>
+        <li>El servo se alimenta <b>siempre</b> desde una fuente de 5 V externa (≥1 A recomendado).</li>
+        <li>El <b>GND de esa fuente debe unirse</b> al GND de la placa (masa común) para que la señal de control tenga referencia.</li>
+        <li>El INA219 se inserta <b>en serie</b> en ese positivo de 5 V (§5) para medir la corriente.</li>
+      </ul>
+
+      <h3 id="t-encoder">3.4 Encoder de cuadratura (HW-040 / KY-040)</h3>
+      <p>El encoder rotatorio produce dos señales desfasadas 90° (cuadratura): <strong>CLK</strong> y <strong>DT</strong>. Girar en un sentido adelanta a CLK respecto de DT; en el otro, DT respecto de CLK. El firmware usa:</p>
+      <ul>
+        <li>Interrupción <code>CHANGE</code> en CLK; al flanco se lee DT para decidir el sentido (CW / CCW).</li>
+        <li><b>Debounce</b> por timestamp (5 ms en el encoder, 50 ms en el pulsador).</li>
+        <li>Un <strong>detent</strong> = ±1 (grado, o ±10 µs / ±50 mA en ajustes).</li>
+        <li>El pulsador <strong>SW</strong> (interrupción <code>FALLING</code>) entra/sale de menús y guarda en SETTINGS.</li>
+      </ul>
+      <div class="callout ok">
+        <div class="ico">✅</div>
+        <div class="body"><p><b>Por qué CHANGE + lectura de DT.</b> Es robusto en el C3 y sin dependencias frágiles: un solo flanco por detent, con anti-rebote por tiempo. Por eso “salta pasos” es raro; si ocurre, es ruido mecánico (ver §10).</p></div>
+      </div>
+
+      <h3 id="t-divisor">3.5 Divisor de tensión (medición de V)</h3>
+      <p>El ADC del C3 sólo acepta hasta ~3.3 V. Como queremos medir el rail de 5 V del servo, usamos un <strong>divisor resistivo 10k/10k</strong> que entrega la mitad de la tensión al pin GPIO3.</p>
+      <h4>Ley de Ohm y el divisor</h4>
+      <p>En un divisor de dos resistencias en serie, la tensión en el punto medio es:</p>
+      <pre><code>V_medio = V_in × R2 / (R1 + R2)</code></pre>
+      <p>Con <code>R1 = R2 = 10k</code> → factor de división <strong>2.0</strong> (entrega exactamente la mitad). El firmware recupera la tensión real:</p>
+      <pre><code>Vservo = adc × (3.3 / 4095) × 2.0 × vCal</code></pre>
+      <ul>
+        <li><b>ADC de 12 bits:</b> rango 0–4095. Con atenuación <code>ADC_11db</code> cubre 0–3.3 V aprox.</li>
+        <li><b>Por qué 10k/10k:</b> resistencias iguales → mitad exacta y corriente bajísima (~0.25 mA), no carga el rail. Valores mucho mayores serían frágiles al ruido; mucho menores desperdiciarían corriente.</li>
+        <li><b>El pull-up de la placa (CH340):</b> GPIO1/3 llevan un pull-up débil a 3.3 V del CH340 USB-UART. Con el divisor 10k/10k la resistencia de Thévenin es 5k, así que un pull-up de decenas de kΩ sólo añade un <em>offset pequeño y casi constante</em>.</li>
+      </ul>
+      <div class="callout warn">
+        <div class="ico">⚠️</div>
+        <div class="body"><p><b>Constante vCal.</b> Ese pequeño offset (más la tolerancia de las resistencias) se corrige con <code>vCal</code> (calibración de un punto, §9). Si necesitas máxima precisión, mueve el divisor a GPIO1 (misma situación) o corta el pull-up del CH340. Funcionalmente cualquiera sirve.</p></div>
+      </div>
+
+      <h3 id="t-ina219">3.6 Sensor de corriente INA219</h3>
+      <p>El INA219 es un medidor de <strong>bus voltage</strong> y <strong>shunt</strong> por <strong>efecto Hall / amplificador de derivación</strong>. Se comunica por I²C (dirección 0x40) y entrega:</p>
+      <ul>
+        <li><code>getBusVoltage_V()</code> → tensión del bus (el 5 V medido “aguas abajo”).</li>
+        <li><code>getCurrent_mA()</code> → corriente que circula por su trayecto en serie.</li>
+        <li>La <strong>potencia</strong> se deriva en firmware: <code>W = Vbus × I</code>.</li>
+      </ul>
+      <h4>Cómo se cablea (¡en serie!)</h4>
+      <p>El INA219 NO va en paralelo. Se inserta <strong>entre la fuente 5 V y el V+ del servo</strong>: la corriente del servo debe atravesarlo. Sus pines <code>VIN+</code> reciben el 5 V de la fuente y <code>VIN−</code> alimentan al servo. La masa (GND) de fuente, INA219 y placa van unidas. La calibración usada es <code>setCalibration_32V_2A()</code> (cubre servos de hobby estándar).</p>
+      <div class="callout danger">
+        <div class="ico">🚫</div>
+        <div class="body"><p><b>No lo pongas en paralelo.</b> Si conectas VIN+ y VIN− a los mismos dos puntos del rail sin que la corriente del servo pase por él, leerás 0 mA. Debe ser un “interruptor de corriente” en el positivo.</p></div>
+      </div>
+
+      <h3 id="t-diagnostico">3.7 Qué te dicen V e I sobre un servo</h3>
+      <p>La telemetría convierte números en diagnóstico:</p>
+      <table>
+        <thead><tr><th>Condición observada</th><th>Interpretación</th></tr></thead>
+        <tbody>
+          <tr><td>Reposo: pocos mA, V ≈ 5 V</td><td>Servo sano, sin esfuerzo.</td></tr>
+          <tr><td>Al mover: 100–400 mA, sube con el par</td><td>Comportamiento normal.</td></tr>
+          <tr><td>I ≥ umbral (≥800 mA) y se mantiene alta sin esfuerzo</td><td><b>Servo atascado</b> (tope forzado, engranaje roto o carga excesiva). Suena la alarma.</td></tr>
+          <tr><td>V baja de 4.5 V</td><td>Fuente débil, caída en cable/INA219 o cortocircuito parcial.</td></tr>
+          <tr><td>I ≈ 0 mA y no se mueve</td><td><b>Servo muerto</b> (sin torque) o sin pulsos.</td></tr>
+          <tr><td>I muy alta y V colapsada</td><td><b>Corto interno</b> del servo. Riesgo de quemar fuente/placa.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 4. PINOUT -->
+    <section id="pinout" class="card">
+      <h2>4. Pinout completo</h2>
+      <table>
+        <caption>Asignación de pines de la ESP32-C3 Super Mini (lógica 3.3 V)</caption>
+        <thead><tr><th>Señal</th><th>GPIO</th><th>Destino / notas</th></tr></thead>
+        <tbody>
+          <tr class="bg-sda"><td class="pin-sig s-sda">OLED SDA</td><td>GPIO6</td><td>SDA de la OLED (y del INA219, mismo bus I²C).</td></tr>
+          <tr class="bg-scl"><td class="pin-sig s-scl">OLED SCL</td><td>GPIO7</td><td>SCL de la OLED (y del INA219).</td></tr>
+          <tr class="bg-sig"><td class="pin-sig s-sig">Servo señal</td><td>GPIO10</td><td>Cable de señal del servo (naranja/amarillo). 3.3 V lógico.</td></tr>
+          <tr class="bg-enc"><td class="pin-sig s-enc">Encoder CLK</td><td>GPIO4</td><td>CLK del HW-040 (interrupción CHANGE).</td></tr>
+          <tr class="bg-enc"><td class="pin-sig s-enc">Encoder DT</td><td>GPIO5</td><td>DT del HW-040 (sentido de giro).</td></tr>
+          <tr class="bg-enc"><td class="pin-sig s-enc">Encoder SW</td><td>GPIO20</td><td>Pulsador (SW) del HW-040 (interrupción FALLING).</td></tr>
+          <tr class="bg-vs"><td class="pin-sig s-vs">V-sense</td><td>GPIO3</td><td>Punto medio del divisor 10k/10k (desde el 5 V del servo). ADC1 ch3.</td></tr>
+          <tr class="bg-buzz"><td class="pin-sig s-buzz">Buzzer</td><td>GPIO21</td><td>Zumbador piezo (activo a nivel alto).</td></tr>
+          <tr class="bg-gnd"><td class="pin-sig s-gnd">GND</td><td>GND</td><td>Masa común (OLED, encoder, INA219, servo, fuente 5 V).</td></tr>
+          <tr class="bg-3v3"><td class="pin-sig s-3v3">3V3</td><td>3V3</td><td>VCC de la OLED y del encoder.</td></tr>
+          <tr class="bg-ina"><td class="pin-sig s-ina">INA219 I²C</td><td>0x40</td><td>En el bus I²C (GPIO6/7). En <b>serie</b> con el 5 V del servo.</td></tr>
+          <tr class="bg-ina"><td class="pin-sig s-ina">5V ext.</td><td>–</td><td>Entra al <b>VIN+</b> del INA219 (ver §5).</td></tr>
+        </tbody>
+      </table>
+      <div class="callout info">
+        <div class="ico">📌</div>
+        <div class="body"><p><b>Sobre GPIO3 (V-sense):</b> el C3 Super Mini lleva el CH340 de USB-UART con pull-up débil a 3.3 V en GPIO1/3. Con un divisor 10k/10k la resistencia de Thévenin es 5 kΩ, así que el pull-up de la placa sólo añade un offset casi constante, corregido por <code>vCal</code> (§9).</p></div>
+      </div>
+    </section>
+
+    <!-- 5. DIAGRAM -->
+    <section id="diagrama" class="card">
+      <h2>5. Diagrama de conexión (visual)</h2>
+      <p>Colores por tipo de señal. Observa especialmente que el <span class="pin-sig s-ina">INA219 va en serie</span> entre la fuente 5 V y el V+ del servo: la corriente del servo lo atraviesa.</p>
+
+      <div class="legend">
+        <span><i class="wirecol-3v3"></i> 3.3 V (lógica)</span>
+        <span><i class="wirecol-gnd"></i> GND (masa común)</span>
+        <span><i class="wirecol-sda"></i> SDA (I²C)</span>
+        <span><i class="wirecol-scl"></i> SCL (I²C)</span>
+        <span><i class="wirecol-sig"></i> Señal servo</span>
+        <span><i class="wirecol-enc"></i> CLK / DT / SW</span>
+        <span><i class="wirecol-vs"></i> V-sense (divisor)</span>
+        <span><i class="wirecol-ina"></i> 5 V en serie (INA219)</span>
+        <span><i class="wirecol-buzz"></i> Buzzer</span>
+      </div>
+
+      <div class="diagram">
+        <svg viewBox="0 0 820 430" role="img" aria-label="Diagrama de conexión del Servo Tester Nivel 2">
+          <rect class="chip" x="300" y="40" width="220" height="300" rx="10"/>
+          <text class="chip-label" x="410" y="60" text-anchor="middle">ESP32-C3 Super Mini</text>
+
+          <text class="pin-label" x="290" y="100" text-anchor="end">GPIO6 SDA</text>
+          <text class="pin-label" x="290" y="124" text-anchor="end">GPIO7 SCL</text>
+          <text class="pin-label" x="290" y="148" text-anchor="end">GPIO10 SIG</text>
+          <text class="pin-label" x="290" y="172" text-anchor="end">GPIO4 CLK</text>
+          <text class="pin-label" x="290" y="196" text-anchor="end">GPIO5 DT</text>
+          <text class="pin-label" x="290" y="220" text-anchor="end">GPIO20 SW</text>
+          <text class="pin-label" x="290" y="244" text-anchor="end">GPIO3 V-sense</text>
+          <text class="pin-label" x="290" y="268" text-anchor="end">GPIO21 BUZ</text>
+          <text class="pin-label" x="290" y="292" text-anchor="end">GND</text>
+          <text class="pin-label" x="290" y="316" text-anchor="end">3V3</text>
+
+          <rect class="chip" x="40" y="80" width="120" height="70" rx="8"/>
+          <text class="chip-label" x="100" y="118" text-anchor="middle">OLED 0x3C</text>
+          <line class="wire wirecol-sda" x1="160" y1="100" x2="300" y2="100"/>
+          <line class="wire wirecol-scl" x1="160" y1="124" x2="300" y2="124"/>
+          <line class="wire wirecol-gnd" x1="160" y1="146" x2="300" y2="292"/>
+
+          <rect class="chip" x="40" y="170" width="120" height="80" rx="8"/>
+          <text class="chip-label" x="100" y="210" text-anchor="middle">HW-040</text>
+          <line class="wire wirecol-enc" x1="160" y1="172" x2="300" y2="172"/>
+          <line class="wire wirecol-enc" x1="160" y1="196" x2="300" y2="196"/>
+          <line class="wire wirecol-enc" x1="160" y1="220" x2="300" y2="220"/>
+
+          <rect class="chip" x="40" y="300" width="120" height="50" rx="8"/>
+          <text class="chip-label" x="100" y="330" text-anchor="middle">BUZZER</text>
+          <line class="wire wirecol-buzz" x1="160" y1="320" x2="300" y2="268"/>
+
+          <line class="wire wirecol-3v3" x1="300" y1="316" x2="160" y2="316"/>
+          <line class="wire wirecol-3v3" x1="160" y1="316" x2="100" y2="150"/>
+
+          <rect class="chip" x="300" y="358" width="220" height="60" rx="8"/>
+          <text class="chip-label" x="410" y="386" text-anchor="middle">Divisor 10k / 10k</text>
+          <line class="wire wirecol-vs" x1="300" y1="244" x2="300" y2="388"/>
+          <line class="wire wirecol-gnd" x1="410" y1="418" x2="410" y2="388"/>
+          <line class="wire wirecol-vs" x1="520" y1="388" x2="700" y2="388"/>
+
+          <rect class="chip" x="700" y="120" width="100" height="90" rx="8"/>
+          <text class="chip-label" x="750" y="158" text-anchor="middle">SERVO</text>
+          <line class="wire wirecol-sig" x1="520" y1="148" x2="700" y2="148"/>
+          <line class="wire wirecol-gnd" x1="520" y1="200" x2="700" y2="200"/>
+          <text class="pin-label" x="610" y="140" text-anchor="middle">señal</text>
+          <text class="pin-label" x="610" y="192" text-anchor="middle">GND</text>
+
+          <rect class="chip" x="590" y="300" width="130" height="70" rx="8"/>
+          <text class="chip-label" x="655" y="330" text-anchor="middle">INA219</text>
+          <text class="series-tag" x="585" y="295">EN SERIE +5V</text>
+          <line class="wire wirecol-ina" x1="700" y1="388" x2="655" y2="370"/>
+          <line class="wire wirecol-ina" x1="655" y1="300" x2="700" y2="210"/>
+          <line class="wire wirecol-sda" x1="590" y1="330" x2="300" y2="100"/>
+          <line class="wire wirecol-scl" x1="590" y1="345" x2="300" y2="124"/>
+
+          <rect class="chip" x="590" y="388" width="130" height="36" rx="8"/>
+          <text class="chip-label" x="655" y="411" text-anchor="middle">FUENTE 5V</text>
+          <line class="wire wirecol-ina" x1="655" y1="388" x2="655" y2="370" stroke-dasharray="4 3"/>
+        </svg>
+      </div>
+
+      <div class="callout danger">
+        <div class="ico">⚡</div>
+        <div class="body"><p><b>Regla de oro:</b> el INA219 va <strong>en serie</strong> con el positivo del servo, no en paralelo. La masa (GND) de fuente, INA219, placa, OLED, encoder y servo <strong>debe unirse</strong>. El divisor y el INA219 miden la línea de 5 V: cuidado con cortocircuitos (ver §11).</p></div>
+      </div>
+
+      <h4>Resumen de masa común</h4>
+      <p>El <b>GND</b> de la placa, OLED, encoder, INA219, servo y fuente de 5 V <strong>deben estar unidos</strong>. Sin masa común, la señal de control del servo no tiene referencia y el ADC/INA219 miden basura.</p>
+    </section>
+
+    <!-- 6. MODES -->
+    <section id="modos" class="card">
+      <h2>6. Modos de operación y telemetría</h2>
+      <p>Al arrancar se muestra el <strong>MENU</strong>. Girar el encoder mueve el cursor; pulsar SW entra en la opción. En cualquier submodo (salvo SETTINGS), pulsar SW vuelve al MENU.</p>
+      <table>
+        <thead><tr><th>Modo</th><th>Qué hace</th></tr></thead>
+        <tbody>
+          <tr><td><b>MENU</b></td><td>Muestra las 4 opciones y, abajo, la fila <code>V: / I:</code>.</td></tr>
+          <tr><td><b>MANUAL</b></td><td>Cada detent ajusta el ángulo ±1° dentro de [0,180], moviendo el servo en vivo.</td></tr>
+          <tr><td><b>SWEEP</b></td><td>Oscila de 0° a 180° y vuelta, ~1.5 s por dirección. Muestra el ángulo en vivo.</td></tr>
+          <tr><td><b>CENTER</b></td><td>Mantiene el servo en el ángulo central (por defecto 90° = 1500 µs).</td></tr>
+          <tr><td><b>SETTINGS</b></td><td>Configura <code>minUs</code>, <code>maxUs</code>, <code>center</code> e <code>iThresh</code>; se guarda con Preferences.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>6.1 La fila de telemetría V/I en la OLED</h3>
+      <p>En <strong>todos</strong> los modos la pantalla muestra la <span class="pin-sig s-vs">tensión de alimentación</span> (divisor) y la <span class="pin-sig s-ina">corriente en mA</span> (INA219), y marca <strong>ALARMA</strong> si procede. Aspecto típico de la pantalla en MANUAL/SWEEP/CENTER:</p>
+      <div class="oled" aria-hidden="true">
+        <div class="l1"><span>MANUAL</span><span>ALARMA</span></div>
+        <div class="big">90</div>
+        <div class="us">1500 us</div>
+        <div class="tel">V:4.92V I:142mA</div>
+        <div class="bar"><i style="width:50%"></i></div>
+      </div>
+      <ul>
+        <li>Línea 1: modo (y “ALARMA” arriba a la derecha si hay alarma).</li>
+        <li>Número grande: ángulo. Debajo: ancho de pulso en µs.</li>
+        <li>Fila <code>V: x.xxV I: nnnmA</code>; luego una barra gauge del ángulo.</li>
+      </ul>
+
+      <h3>6.2 SETTINGS (detalle)</h3>
+      <ul>
+        <li>Girar el encoder <b>edita el campo seleccionado</b>:
+          <ul>
+            <li><code>minUs</code> (400–1500 µs) en pasos de 10.</li>
+            <li><code>maxUs</code> (1500–2600 µs) en pasos de 10.</li>
+            <li><code>center</code> (0–180°) en pasos de 1.</li>
+            <li><code>iThrsh</code> (100–5000 mA) en pasos de 50: umbral de sobrecorriente.</li>
+          </ul>
+        </li>
+        <li>Pulsar <b>SW avanza al siguiente campo</b>. Tras el último, otra pulsación <b>guarda</b> y vuelve al MENU.</li>
+      </ul>
+
+      <h3>6.3 La alarma</h3>
+      <p>Se activa cuando <code>I &gt; iThresh</code> (editable en SETTINGS, 800 mA por defecto) <strong>o</strong> <code>V &lt; 4.5 V</code>. Al activarse:</p>
+      <ul>
+        <li>La OLED muestra <strong>“ALARMA”</strong> arriba a la derecha.</li>
+        <li>El <span class="pin-sig s-buzz">zumbador</span> emite un beep ~2 Hz (conmuta cada 250 ms mientras dura la alarma).</li>
+      </ul>
+      <div class="callout warn">
+        <div class="ico">🔔</div>
+        <div class="body"><p><b>Alarma falsa por ruido:</b> si suena sin motivo, sube <code>iThrsh</code> en SETTINGS o verifica que la fuente entrega corriente limpia. Una caída de V por cable fino también la dispara.</p></div>
+      </div>
+    </section>
+
+    <!-- 7. CODE WALKTHROUGH -->
+    <section id="codigo" class="card">
+      <h2>7. Recorrido del código por secciones</h2>
+      <ol>
+        <li><strong>Includes y pines</strong> — Wire, Adafruit SSD1306/GFX, ESP32Servo, Preferences y <code>Adafruit_INA219</code>. Se añaden <code>VSENSE_PIN</code> (GPIO3) y <code>BUZZER_PIN</code> (GPIO21).</li>
+        <li><strong>Objetos globales</strong> — <code>display</code> (OLED), <code>servo</code> e <code>ina219</code> (I²C 0x40).</li>
+        <li><strong>Ajustes persistidos</strong> — <code>minUs</code>, <code>maxUs</code>, <code>centerAngle</code>, <code>iThresh</code> y <code>vCal</code> se cargan/guardan con Preferences (namespace <code>servotester</code>). Dominio fijo 0..180°.</li>
+        <li><strong>Encoder por interrupciones</strong> — igual que L1: <code>CHANGE</code> en CLK, debounce 5 ms, un detent = ±1 (o ±10 µs / ±50 mA en SETTINGS).</li>
+        <li><strong>ISRs</strong> — <code>encoderISR()</code> acumula <code>encoderDelta</code>; <code>buttonISR()</code> marca <code>buttonFlag</code>. Ambas <code>IRAM_ATTR</code> y variables <code>volatile</code>.</li>
+        <li><strong>Helpers del analizador</strong> — <code>readVservo()</code> lee el ADC (12 bits, atenuación 11 dB) y aplica <code>vCal</code>; <code>readINA219()</code> lee bus voltage y corriente y calcula la potencia; <code>updateAlarm()</code> y <code>updateBuzzer()</code> gestionan la alarma.</li>
+        <li><strong>Máquina de estados</strong> — <code>handleInput()</code> consume encoder/botón; <code>drawMenu</code>, <code>drawServo</code> (con fila V/I y marca ALARMA), <code>drawSettings</code>, <code>drawGauge</code>.</li>
+        <li><strong><code>setup()</code></strong> — Arranca I²C, OLED, configura el ADC, inicializa el INA219 (<code>setCalibration_32V_2A()</code>) y se detiene si falta; conecta servo, buzzer y encoder; carga ajustes.</li>
+        <li><strong><code>loop()</code></strong> — Cada frame muestrea V/I, evalúa la alarma, suena el zumbador, aplica el ángulo según el modo y dibuja.</li>
+      </ol>
+
+      <h3>Funciones clave (firma y propósito)</h3>
+      <table>
+        <thead><tr><th>Función</th><th>Propósito</th></tr></thead>
+        <tbody>
+          <tr><td><code>angleToUs(a)</code></td><td>Mapea ángulo 0..180 a pulso minUs..maxUs (con constrain).</td></tr>
+          <tr><td><code>sweepAngle()</code></td><td>Calcula el ángulo de barrido triangular de periodo 3 s.</td></tr>
+          <tr><td><code>loadSettings()</code> / <code>saveSettings()</code></td><td>Lee/escribe Preferences con límites de seguridad.</td></tr>
+          <tr><td><code>readVservo()</code></td><td>Lee ADC y aplica <code>(3.3/4095) × 2.0 × vCal</code>.</td></tr>
+          <tr><td><code>readINA219()</code></td><td>Lee bus V y corriente; deriva <code>W = Vbus × I</code>.</td></tr>
+          <tr><td><code>updateAlarm()</code></td><td><code>alarma = (I &gt; iThresh) || (V &lt; 4.5)</code>.</td></tr>
+          <tr><td><code>updateBuzzer()</code></td><td>Beep ~2 Hz mientras hay alarma; silencio si no.</td></tr>
+          <tr><td><code>handleInput()</code></td><td>Consume encoder/botón y transiciona de modo.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 8. FULL SOURCE -->
+    <section id="fuente-codigo" class="card">
+      <h2>8. Código fuente completo (<code>src/main.cpp</code>)</h2>
+      <p>Código idéntico al del repositorio, con resaltado de sintaxis básico. Despliega para verlo entero.</p>
+      <details>
+        <summary>Mostrar / ocultar el código fuente completo de main.cpp</summary>
+        <pre><code>EOF
+cat /tmp/code.html >> /home/hywhook/servo-tester/nivel2/manual.html
+cat >> /home/hywhook/servo-tester/nivel2/manual.html <<'EOF'
+</code></pre>
+      </details>
+    </section>
+
+    <!-- 9. CALIBRATION -->
+    <section id="calibracion" class="card">
+      <h2>9. Calibración</h2>
+      <p>Tres puntos se pueden calibrar: los límites del servo (<code>minUs</code>/<code>maxUs</code>/<code>center</code>), el divisor de tensión (<code>vCal</code>) y el umbral de corriente (<code>iThresh</code>).</p>
+
+      <h3>9.1 Límites del servo (minUs / maxUs / center)</h3>
+      <ol class="steps">
+        <li>Entra en <strong>SETTINGS</strong>.</li>
+        <li>Ajusta <code>minUs</code> al tope donde el servo <b>empieza</b> a moverse (típico 500 µs).</li>
+        <li>Ajusta <code>maxUs</code> al otro tope (típico 2500 µs).</li>
+        <li>Fija <code>center</code> (normalmente 90°) y pulsa SW para <b>guardar</b>.</li>
+      </ol>
+      <p>Estos límites definen el pulso entregado en 0° y 180°, adaptándose a servos no estándar. El campo extra <code>iThrsh</code> fija el umbral de sobrecorriente (§6.3).</p>
+
+      <h3>9.2 Divisor de tensión (vCal)</h3>
+      <p>El divisor 10k/10k entrega la mitad de la tensión del servo al ADC. El código calcula <code>Vservo = adc × (3.3/4095) × 2.0 × vCal</code>, con <code>vCal = 1.0</code> por defecto. Para calibrar de un punto (recomendado; corrige el pull-up de la placa y las tolerancias de las resistencias):</p>
+      <ol class="steps">
+        <li>Con el servo alimentado y el firmware leyendo, mide con un polímetro la <b>tensión real</b> del rail de 5 V del servo (en el punto donde va el divisor).</li>
+        <li>Lee en la OLED la <code>V:</code> que muestra el firmware (sin calibrar, <code>vCal=1</code>).</li>
+        <li>Calcula <code>vCal = V_real_medida_polimetro / V_mostrada_OLED</code>.</li>
+        <li>Para fijar <code>vCal</code> de forma permanente, edítalo en <code>loadSettings()</code>/guárdalo vía Preferences (clave <code>vCal</code>) o recompila con el valor. Con un punto de calibración a ~5 V el error en todo el rango es despreciable.</li>
+      </ol>
+      <div class="callout info"><div class="ico">📌</div><div class="body"><p>(Opcional) Si el pull-up del CH340 molesta, mueve el divisor a GPIO1 o corta el pull-up; el procedimiento de calibración es idéntico.</p></div></div>
+
+      <h3>9.3 Umbral de corriente (iThresh)</h3>
+      <p>En SETTINGS ajusta <code>iThrsh</code> entre 100 y 5000 mA (pasos de 50). Un valor demasiado bajo dispara la alarma con cargas normales; demasiado alto deja pasar un servo atascado. Para un servo estándar (SG90) 500–800 mA suele ser buen punto; para MG996R sube a 1500–2000 mA.</p>
+    </section>
+
+    <!-- 10. TROUBLESHOOTING -->
+    <section id="trouble" class="card">
+      <h2>10. Solución de problemas</h2>
+      <table>
+        <caption>Síntoma → Causa probable → Solución</caption>
+        <thead><tr><th>Síntoma</th><th>Causa probable</th><th>Solución</th></tr></thead>
+        <tbody>
+          <tr><td>Pantalla en blanco</td><td>OLED mal cableada o dir. distinta</td><td>Revisa SDA/SCL/GND; confirma 0x3C.</td></tr>
+          <tr><td>“INA219 ??” al arrancar</td><td>INA219 ausente / mal cableado</td><td>Revisa I²C (GPIO6/7) y que VIN± tengan 5 V/GND.</td></tr>
+          <tr><td>El servo no se mueve</td><td>Sin masa común o fuente 5 V ausente</td><td>Une GND de todo; alimenta el servo por separado.</td></tr>
+          <tr><td>OLED congelada en “INA219 ??”</td><td>INA219 no responde en 0x40</td><td>Verifica dirección (0x40) y pull-ups de SDA/SCL.</td></tr>
+          <tr><td>V siempre alta aunque servo apagado</td><td>Pull-up del CH340 en GPIO3</td><td>Calibra con <code>vCal</code> (§9.2) o usa GPIO1.</td></tr>
+          <tr><td>Servo tiembla/garra</td><td>Fuente 5 V insuficiente</td><td>Usa fuente con más corriente (≥1 A).</td></tr>
+          <tr><td>Alarma suena sin motivo</td><td>Umbral <code>iThrsh</code> muy bajo o ruido</td><td>Sube <code>iThrsh</code> en SETTINGS.</td></tr>
+          <tr><td>INA219 lee 0 mA</td><td>Cableado en paralelo, no en serie</td><td>Inserta el INA219 en el positivo 5 V del servo (§5).</td></tr>
+          <tr><td>Divisor mide mal</td><td>Tolerancia R / pull-up placa</td><td>Calibra <code>vCal</code> (§9.2); usa R de 1%.</td></tr>
+          <tr><td>Encoder salta pasos</td><td>Rebote mecánico</td><td>Ya hay debounce de 5 ms; reduce velocidad de giro.</td></tr>
+          <tr><td>No veo Serial por USB</td><td><b>Gotcha USB-CDC</b> (ver §11)</td><td>Es UART0, no USB; mira la OLED.</td></tr>
+          <tr><td>Error de compilación <code>Serial</code></td><td>Flag USB-CDC mal puesto</td><td>No uses <code>ARDUINO_USB_CDC_ON_BOOT</code> (§11).</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 11. SECURITY / USB-CDC -->
+    <section id="seguridad" class="card">
+      <h2>11. Seguridad y la trampa USB-CDC</h2>
+      <div class="callout danger">
+        <div class="ico">⚠️</div>
+        <div class="body">
+          <p><b>Trampa USB-CDC (core 7.0.1).</b> Este core de Arduino <b>no incluye <code>usb_serial.h</code></b> para el C3. Si añades <code>build_flags = -D ARDUINO_USB_CDC_ON_BOOT=1</code>, la compilación falla con <code>'Serial' was not declared</code>. Por eso el <code>platformio.ini</code> <b>no</b> pone ese flag.</p>
+          <p>Sin él, <code>Serial</code> es UART0 (GPIO1/3), que la Super Mini <b>no saca por el conector USB</b>. La carga del firmware se hace igualmente por USB nativo con <code>esptool</code> (<code>/dev/ttyACM0</code>), sin necesidad de pulsar BOOT. Todo el debug se hace por la <b>OLED</b>, no por el monitor serie.</p>
+        </div>
+      </div>
+      <div class="callout warn">
+        <div class="ico">🔌</div>
+        <div class="body">
+          <p><b>Aviso de seguridad eléctrica.</b> El INA219 y el divisor miden la línea de <b>5 V</b>. Un cortocircuito entre V+ y GND del servo (o un servo con corto interno) puede sobrecalentar cables, quemar la fuente o el INA219. Usa fusibles o una fuente con protección de sobrecorriente, verifica el cableado <b>en serie</b> del INA219 antes de energizar, y no toques los pines de 5 V con la fuente conectada.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12. COMPILE -->
+    <section id="compilar" class="card">
+      <h2>12. Cómo compilar y cargar</h2>
+      <p>Desde el directorio del proyecto:</p>
+      <pre><code># Compilar (pio descarga las librerías automáticamente)
+pio run
+
+# Cargar (esptool por USB nativo, /dev/ttyACM0; sin botón BOOT)
+pio run -t upload
+
+# Monitor serie (solo UART0, no visible por USB)
+pio device monitor</code></pre>
+      <div class="callout info"><div class="ico">ℹ️</div><div class="body"><p><code>pio run</code> descarga las librerías (Adafruit SSD1306, Adafruit GFX, ESP32Servo, Adafruit INA219) automáticamente si hay red. El <code>platformio.ini</code> fija <code>board_build.flash_mode = dio</code> y <code>upload_speed = 921600</code>. No es necesario subir para compilar.</p></div></div>
+    </section>
+
+    <!-- 13. FAQ -->
+    <section id="faq" class="card">
+      <h2>13. Preguntas frecuentes (FAQ)</h2>
+      <h4>¿Por qué no uso el USB para ver datos?</h4>
+      <p>Por la trampa USB-CDC (§11): este core no expone CDC en el C3, así que <code>Serial</code> cae a UART0, que la Super Mini no saca por USB. Toda la telemetría va a la OLED.</p>
+      <h4>¿Puedo alimentar el servo desde el 5V de la placa?</h4>
+      <p>No. El regulador de la Super Mini no da la corriente de pico de un servo. Usa una fuente externa de ≥1 A con masa común.</p>
+      <h4>¿El INA219 va en paralelo?</h4>
+      <p>No. Debe ir <b>en serie</b> con el positivo del servo (§5); si no, leerás 0 mA.</p>
+      <h4>¿Cómo cambio el umbral de alarma?</h4>
+      <p>En SETTINGS, campo <code>iThrsh</code> (100–5000 mA). La alarma también salta si V &lt; 4.5 V.</p>
+      <h4>¿Por qué mi V mide alta estando el servo apagado?</h4>
+      <p>El pull-up del CH340 en GPIO3. Cálmalo con <code>vCal</code> (§9.2) o mueve el divisor a GPIO1.</p>
+      <h4>¿Pierdo la configuración al desconectar?</h4>
+      <p>No. <code>minUs</code>, <code>maxUs</code>, <code>center</code>, <code>iThresh</code> y <code>vCal</code> se guardan en Preferences (flash).</p>
+      <h4>¿Funciona con cualquier servo?</h4>
+      <p>Sí, siempre que sea de 50 Hz y 5 V. Calibra <code>minUs</code>/<code>maxUs</code> si el recorrido no es 500–2500 µs.</p>
+    </section>
+
+    <footer>
+      Servo Tester Nivel 2 · ESP32-C3 Super Mini · Manual generado para uso con Arduino/PlatformIO ·
+      Recuerda: INA219 en serie, masa común, fuente 5 V externa.
+    </footer>
+  </main>
+</div>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('#toc a'));
+  var sections = links.map(function (a) {
+    return document.querySelector(a.getAttribute('href'));
+  });
+  function onScroll() {
+    var pos = window.scrollY + 120;
+    var current = sections[0];
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i] && sections[i].offsetTop <= pos) current = sections[i];
+    }
+    links.forEach(function (a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + (current ? current.id : ''));
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+</script>
+</body>
+</html>
