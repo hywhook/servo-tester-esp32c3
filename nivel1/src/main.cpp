@@ -239,17 +239,12 @@ void drawMenu() {
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(WHITE);
-  
-  // Centrar título "MENU"
-  int menuWidth = strlen("MENU") * 6;  // aprox 6px/char en tamaño 1
-  display.setCursor((128 - menuWidth) / 2, 0);
+  display.setCursor(0, 0);
   display.println("MENU");
 
   const char* items[] = { "MANUAL", "SWEEP", "CENTER", "SETTINGS" };
   for (int i = 0; i < MENU_COUNT; i++) {
-    int itemWidth = strlen(items[i]) * 6;  // aprox 6px/char en tamaño 1
-    int itemX = (128 - itemWidth) / 2;
-    display.setCursor(itemX, 14 + i * 10);
+    display.setCursor(0, 14 + i * 10);
     display.print(i == menuIndex ? "> " : "  ");
     display.println(items[i]);
   }
@@ -260,10 +255,7 @@ void drawSettings() {
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(WHITE);
-  
-  // Centrar título "SETTINGS"
-  int setWidth = strlen("SETTINGS") * 6;  // aprox 6px/char en tamaño 1
-  display.setCursor((128 - setWidth) / 2, 0);
+  display.setCursor(0, 0);
   display.println("SETTINGS");
 
   display.print(settingField == 0 ? " >" : "  ");
