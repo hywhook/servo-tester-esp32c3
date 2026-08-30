@@ -212,13 +212,14 @@ void drawServo(const char* label, int ang) {
   display.println(label);
 
   // Ángulo a la izquierda, duración a la derecha en la misma línea
-  display.setTextSize(3);
-  display.setCursor(20, 16);
+  // Usamos tamaño 2 para ambos para que entren en 128px
+  display.setTextSize(2);
+  display.setCursor(15, 14);
   display.print(ang);
 
   // Mostrar duración al lado derecho del ángulo
-  display.setTextSize(2);
-  display.setCursor(80, 16);      // comienza a la derecha del número de ángulo
+  display.setTextSize(1);
+  display.setCursor(65, 14);      // comienza a la derecha del número de ángulo
   if (strcmp(label, "SWEEP") == 0) {
     display.print("Dur:");
     display.print(sweepDurationSec);
