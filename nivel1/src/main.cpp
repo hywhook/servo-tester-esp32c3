@@ -56,9 +56,9 @@ const int maxAng = 180;
 // ----------------------------- Encoder (interrupt based) --------------------
 // Net detents since last poll: positive = CW, negative = CCW.
 volatile int  encoderDelta = 0;
-volatile unsigned long lastEncMs = 0;
 volatile bool buttonFlag = false;
 volatile unsigned long lastBtnMs = 0;
+volatile uint8_t lastClkState = LOW;   // para ISR de encoder (flanco de subida limpio)
 
 // ----------------------------- State machine --------------------------------
 enum Mode { MENU, MANUAL, SWEEP, CENTER, SETTINGS };
@@ -79,13 +79,11 @@ int angle = 90;
 // ----------------------------- ISRs -----------------------------------------
 void IRAM_ATTR encoderISR() {
   int clk = digitalRead(ENC_CLK);
-  if (clk == HIGH) {                   // count on rising edge of CLK (1 / detent)
-    unsigned long now = millis();
-    if (now - lastEncMs < 5) return;   // 5 ms debounce only for rising edges
-    lastEncMs = now;
+  if (clk == HIGH && lastClkState == LOW) {   // flanco de subida limpio LOW→HIGH
     int dt = digitalRead(ENC_DT);
-    encoderDelta += (dt == LOW) ? 1 : -1;   // CW vs CCW
+    encoderDelta += (dt == LOW) ? 1 : -1;     // CW = +1, CCW = -1
   }
+  lastClkState = clk;                           // actualiza estado para la próxima
 }
 
 void IRAM_ATTR buttonISR() {
