@@ -45,8 +45,8 @@ Servo servo;
 // define the pulse width delivered at 0 deg and 180 deg respectively. "center"
 // is the angle held in CENTER mode. Everything is stored in Preferences.
 Preferences prefs;
-int minUs       = 500;    // pulse width (us) at 0 deg
-int maxUs       = 2500;   // pulse width (us) at 180 deg
+int minUs       = 100;    // pulse width (us) at 0 deg
+int maxUs       = 2200;   // pulse width (us) at 180 deg
 int centerAngle = 90;     // angle held in CENTER mode
 
 // Fixed angle domain.
@@ -147,8 +147,8 @@ void handleInput() {
         angle = constrain(angle + d, minAng, maxAng);
         break;
       case SETTINGS:
-        if (settingField == 0)      minUs       = constrain(minUs + d * 10, 400, 1500);
-        else if (settingField == 1) maxUs       = constrain(maxUs + d * 10, 1500, 2600);
+if (settingField == 0)      minUs       = constrain(minUs + d * 500, 100, 2200);
+else if (settingField == 1) maxUs       = constrain(maxUs + d * 500, 100, 2200);
         else                        centerAngle = constrain(centerAngle + d, 0, 180);
         break;
       default:
