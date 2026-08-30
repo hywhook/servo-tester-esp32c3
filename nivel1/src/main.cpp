@@ -211,28 +211,25 @@ void drawServo(const char* label, int ang) {
   display.setCursor(0, 0);
   display.println(label);
 
+  // Ángulo a la izquierda, duración a la derecha en la misma línea
   display.setTextSize(3);
   display.setCursor(20, 16);
   display.print(ang);
 
-  display.setTextSize(1);
-  display.setCursor(0, 46);
-  display.print(angleToUs(ang));
-  display.print(" us");
-
-  drawGauge(ang);
-
-  // Mostrar duración con tamaño grande en la línea de estado
-  display.setTextSize(2);           // <- agrandado de 1 a 2
-  display.setCursor(0, 56);       // posición un poco más arriba
+  // Mostrar duración al lado derecho del ángulo
+  display.setTextSize(2);
+  display.setCursor(80, 16);      // comienza a la derecha del número de ángulo
   if (strcmp(label, "SWEEP") == 0) {
-    display.print("Dur: ");
+    display.print("Dur:");
     display.print(sweepDurationSec);
     display.print("s");
   } else {
     display.print("Modo: ");
     display.print(label);
   }
+
+  // Barra de gauge al final de la pantalla (abajo)
+  drawGauge(ang);
 
   display.display();
 }
