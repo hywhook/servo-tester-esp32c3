@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contexto del proyecto — Servo Tester ESP32-C3</title>
+<style>
+:root{
+  --bg:#0f172a; --panel:#1e293b; --card:#172033; --text:#e2e8f0; --muted:#94a3b8;
+  --accent:#38bdf8; --info:#3b82f6; --warn:#f59e0b; --danger:#ef4444; --ok:#22c55e; --border:#334155;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.65}
+header{padding:2.6rem 1.5rem;text-align:center;background:linear-gradient(135deg,#0c4a6e,#0f172a)}
+header h1{margin:0;font-size:2rem}
+header p{color:var(--muted);max-width:680px;margin:.8rem auto}
+.badges{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin-top:1rem}
+.badge{background:var(--panel);border:1px solid var(--border);padding:.3rem .8rem;border-radius:999px;font-size:.78rem;color:var(--muted)}
+main{max-width:960px;margin:0 auto;padding:2rem 1.5rem}
+section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.4rem 1.6rem;margin:1.2rem 0;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+h2{border-left:4px solid var(--accent);padding-left:.7rem;margin-top:0}
+h3{color:var(--accent);font-size:1.05rem}
+table{width:100%;border-collapse:collapse;margin:.6rem 0}
+th,td{border:1px solid var(--border);padding:.5rem .7rem;text-align:left;font-size:.92rem}
+th{background:var(--panel);color:var(--text)}
+tbody tr:nth-child(odd){background:rgba(255,255,255,.02)}
+code{background:#0b1220;padding:.12rem .4rem;border-radius:5px;color:#7dd3fc}
+.callout{border-left:4px solid var(--warn);background:rgba(245,158,11,.08);padding:.9rem 1.1rem;border-radius:8px;margin:1rem 0}
+.callout.danger{border-color:var(--danger);background:rgba(239,68,68,.08)}
+.timeline{list-style:none;padding-left:0}
+.timeline li{padding:.5rem 0;border-bottom:1px dashed var(--border)}
+.timeline b{color:var(--ok)}
+a{color:var(--accent)}
+pre{background:#0b1220;border:1px solid var(--border);border-radius:10px;padding:1rem;overflow:auto}
+footer{text-align:center;color:var(--muted);padding:2rem;font-size:.85rem}
+</style>
+</head>
+<body>
+<header>
+<h1>Contexto del proyecto — Servo Tester ESP32-C3 Super Mini</h1>
+<p>Resumen completo y cronología de decisiones para retomar el trabajo más adelante. Todo lo creado en esta sesión, en un solo lugar.</p>
+<div class="badges"><span class="badge">ESP32-C3 Super Mini</span><span class="badge">PlatformIO / Arduino</span><span class="badge">Sesión 30-ago-2026</span><span class="badge">Repo: servo-tester-esp32c3</span></div>
+</header>
+<main>
+
+<section>
+<h2>1. Objetivo</h2>
+<p>Construir un <b>probador de servos profesional</b> para el <b>ESP32-C3 Super Mini</b>, controlado con un <b>encoder rotativo HW-040</b> (no potenciómetro) y con un <b>OLED SSD1306 I2C</b> que muestra el ángulo y los microsegundos. Entregado en <b>3 niveles crecientes</b>, cada uno un proyecto PlatformIO autónomo, con manuales HTML en modo oscuro y diagramas de circuito SVG a color.</p>
+</section>
+
+<section>
+<h2>2. Cómo llegamos aquí (cronología)</h2>
+<ul class="timeline">
+<li><b>Inicio:</b> prototipo con <b>potenciómetro</b> leyendo ADC (GPIO4). Compiló y se flasheó al ESP para probar detección/toolchain.</li>
+<li><b>Cambio de paradigma:</b> el usuario consultó por el <b>HW-040</b>. Decidimos usarlo: el pot es absoluto (ADC) pero ruidoso en C3; el encoder es incremental (contador en software), sin ADC y con botón para el menú. Mejor para un tester.</li>
+<li><b>Alcance:</b> el usuario pidió los <b>3 niveles</b> por separado + manuales completos + subir a GitHub.</li>
+<li><b>Nivel 1:</b> menú + modos Manual/Sweep/Center + lectura en µs + límites persistidos (Preferences).</li>
+<li><b>Nivel 2:</b> + analizador V/I (divisor de tensión + INA219 en serie) + alarma.</li>
+<li><b>Nivel 3:</b> + 4 canales + BLE (NimBLE) + gráfico de respuesta.</li>
+<li><b>Manuales:</b> primero en Markdown; luego el usuario pidió <b>HTML con colores y todo el detalle</b>.</li>
+<li><b>Ajuste final:</b> usuario pidió <b>modo oscuro en todas las páginas</b> y <b>diagramas de circuito SVG a color</b> (por señal, con leyenda).</li>
+<li><b>Flash:</b> se cargó el <b>Nivel 1</b> en la ESP conectada (/dev/ttyACM0). Sin OLED/encoder/servo cableados aún, el firmware queda esperando el OLED en <code>setup()</code>.</li>
+</ul>
+</section>
+
+<section>
+<h2>3. Hardware común</h2>
+<table>
+<tr><th>Componente</th><th>Notas</th></tr>
+<tr><td>ESP32-C3 Super Mini</td><td>USB nativo <code>303a:1001</code>; lógica 3.3 V</td></tr>
+<tr><td>OLED SSD1306 128×64</td><td>I2C, addr <code>0x3C</code>, SDA=GPIO6 / SCL=GPIO7</td></tr>
+<tr><td>Encoder HW-040</td><td>Rotativo incremental (como KY-040): CLK=4, DT=5, SW=20</td></tr>
+<tr><td>Servo(s)</td><td>Señal GPIO10 (L1/L2); 4 canales en L3</td></tr>
+<tr><td>Fuente 5 V externa</td><td>Obligatoria para el servo; <b>GND común</b> con el C3</td></tr>
+<tr><td>INA219 + divisor 10k/10k</td><td>Solo L2/L3 (medición V/I)</td></tr>
+<tr><td>Buzzer piezo</td><td>L2=GPIO21, L3=GPIO8</td></tr>
+</table>
+</section>
+
+<section>
+<h2>4. Pinout por nivel</h2>
+<h3>Nivel 1</h3>
+<table><tr><th>Señal</th><th>Pin</th></tr>
+<tr><td>OLED SDA / SCL</td><td>GPIO6 / GPIO7 (0x3C)</td></tr>
+<tr><td>Servo</td><td>GPIO10</td></tr>
+<tr><td>Encoder CLK / DT / SW</td><td>GPIO4 / GPIO5 / GPIO20</td></tr></table>
+
+<h3>Nivel 2 (añade)</h3>
+<table><tr><th>Señal</th><th>Pin</th></tr>
+<tr><td>V-sense (divisor 10k/10k)</td><td>GPIO3 (ADC1)</td></tr>
+<tr><td>INA219 (I2C, en serie con 5 V)</td><td>0x40 en el mismo bus SDA/SCL</td></tr>
+<tr><td>Buzzer</td><td>GPIO21</td></tr></table>
+
+<h3>Nivel 3 (añade / cambia)</h3>
+<table><tr><th>Señal</th><th>Pin</th></tr>
+<tr><td>4 servos</td><td>GPIO10, GPIO1, GPIO2, GPIO21</td></tr>
+<tr><td>Buzzer</td><td>GPIO8</td></tr>
+<tr><td>V-sense / INA219</td><td>GPIO3 / 0x40 (igual que L2)</td></tr>
+<tr><td>BLE</td><td>NimBLE integrado ("ServoTester", read+notify + write)</td></tr></table>
+</section>
+
+<div class="callout danger">
+<b>⚠️ Gotcha USB-CDC (crítico, ya nos quemó una compilación):</b> el core <code>framework-arduinoespressif32 7.0.1</code> <b>no incluye <code>usb_serial.h</code> para C3</b>. Por eso <b>ningún nivel</b> usa <code>ARDUINO_USB_CDC_ON_BOOT=1</code>: al ponerlo, <code>Serial</code> queda sin definir y no compila. <code>Serial</code> cae a UART0 (GPIO1/3), que el Super Mini <b>no cablea al USB</b> → el debug se hace por el <b>OLED</b>, no por el monitor serie USB. <code>platformio.ini</code> lleva <code>board_build.flash_mode = dio</code>.
+</div>
+
+<section>
+<h2>5. Estructura en GitHub</h2>
+<p>Repo: <a href="https://github.com/hywhook/servo-tester-esp32c3">github.com/hywhook/servo-tester-esp32c3</a></p>
+<pre>servo-tester-esp32c3/
+├── README.md          (índice, enlaces a HTML)
+├── index.html         (landing de manuales, dark)
+├── contexto.html      (este archivo)
+├── nivel1/  platformio.ini  src/main.cpp  README.md  manual.html
+├── nivel2/  platformio.ini  src/main.cpp  README.md  manual.html
+└── nivel3/  platformio.ini  src/main.cpp  README.md  manual.html</pre>
+<p>Uso de flash: <b>L1 23.5%</b> · <b>L2 24.4%</b> · <b>L3 80.9%</b> (BLE es pesado). RAM &lt; 13% en todos.</p>
+</section>
+
+<section>
+<h2>6. Estado actual y cómo retomar</h2>
+<h3>Estado</h3>
+<ul>
+<li>Los 3 niveles <b>compilan</b> (verificado con <code>pio run</code>).</li>
+<li><b>Nivel 1 está flasheado</b> en la ESP conectada (<code>/dev/ttyACM0</code>). Falta cablear OLED + encoder + servo para verlo vivo (sin OLED se queda en <code>setup()</code> esperando el display).</li>
+<li>Manuales HTML en dark mode con diagramas SVG a color, subidos.</li>
+</ul>
+<h3>Para retomar</h3>
+<ol>
+<li>Clonar: <code>git clone https://github.com/hywhook/servo-tester-esp32c3</code></li>
+<li>Leer <code>index.html</code> y el <code>manual.html</code> del nivel deseado.</li>
+<li>Para probar en hardware: cablear según el diagrama SVG del manual, luego <code>cd nivelN &amp;&amp; pio run -t upload</code>.</li>
+<li>Si se quiere flashear otro nivel (p. ej. L3 con BLE), misma carpeta y comando; el flash anterior se sobrescribe.</li>
+</ol>
+</section>
+
+<section>
+<h2>7. Posibles siguientes pasos (pendientes / propuestos)</h2>
+<ul>
+<li>Cablear OLED + encoder + servo y <b>verificar en vivo</b> que ángulo y movimiento coinciden.</li>
+<li>Flash de <b>L2/L3</b> cuando el usuario tenga INA219 / quiera BLE.</li>
+<li>Opción de <b>3 repos separados</b> (hoy es uno solo con carpetas).</li>
+<li>Variante con <b>potenciómetro</b> (el usuario dijo NO, pero queda como posibilidad si cambia de idea).</li>
+<li>Mejoras de esquemas: pines numerados sobre el chip, o fotos del armado.</li>
+</ul>
+</section>
+
+</main>
+<footer>Generado como respaldo de sesión · Repo: github.com/hywhook/servo-tester-esp32c3</footer>
+</body>
+</html>
