@@ -260,7 +260,10 @@ void drawSettings() {
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(WHITE);
-  display.setCursor(0, 0);
+  
+  // Centrar título "SETTINGS"
+  int setWidth = strlen("SETTINGS") * 6;  // aprox 6px/char en tamaño 1
+  display.setCursor((128 - setWidth) / 2, 0);
   display.println("SETTINGS");
 
   display.print(settingField == 0 ? " >" : "  ");
