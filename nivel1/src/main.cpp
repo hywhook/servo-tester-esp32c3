@@ -78,11 +78,11 @@ int angle = 90;
 
 // ----------------------------- ISRs -----------------------------------------
 void IRAM_ATTR encoderISR() {
-  unsigned long now = millis();
-  if (now - lastEncMs < 12) return;    // 12 ms debounce — HW-040 bounces 5-20 ms
-  lastEncMs = now;
   int clk = digitalRead(ENC_CLK);
   if (clk == HIGH) {                   // count on rising edge of CLK (1 / detent)
+    unsigned long now = millis();
+    if (now - lastEncMs < 5) return;   // 5 ms debounce only for rising edges
+    lastEncMs = now;
     int dt = digitalRead(ENC_DT);
     encoderDelta += (dt == LOW) ? 1 : -1;   // CW vs CCW
   }
