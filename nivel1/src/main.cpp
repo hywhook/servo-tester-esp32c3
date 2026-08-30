@@ -45,7 +45,7 @@ Servo servo;
 // define the pulse width delivered at 0 deg and 180 deg respectively. "center"
 // is the angle held in CENTER mode. Everything is stored in Preferences.
 Preferences prefs;
-int minUs       = 100;    // pulse width (us) at 0 deg
+int minUs       = 500;    // pulse width (us) at 0 deg
 int maxUs       = 2000;   // pulse width (us) at 180 deg
 int centerAngle = 90;     // angle held in CENTER mode
 int sweepDurationSec = 3; // sweep duration in seconds (0->180), round-trip 2*this
@@ -158,7 +158,7 @@ if (d != 0) {
         if (minUs >= maxUs) minUs = maxUs - 1;  // protección cruzada
         break;
       case SWEEP:
-        sweepDurationSec = constrain(sweepDurationSec + d, 1, 10);
+        sweepDurationSec = constrain(sweepDurationSec + d, 1, 9);
         saveSettings(); // guardar al cambiar sobre la marcha
         break;
       default:
