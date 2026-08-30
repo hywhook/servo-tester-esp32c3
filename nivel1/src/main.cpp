@@ -142,7 +142,7 @@ void handleInput() {
   encoderDelta = 0;
   interrupts();
 
-  if (d != 0) {
+if (d != 0) {
     switch (mode) {
       case MENU:
         menuIndex = constrain(menuIndex + d, 0, MENU_COUNT - 1);
@@ -150,17 +150,21 @@ void handleInput() {
       case MANUAL:
         angle = constrain(angle + d, minAng, maxAng);
         break;
-case SETTINGS:
+      case SETTINGS:
         if (settingField == 0)      minUs       = constrain(minUs + d * 10, 100, 500);
         else if (settingField == 1) maxUs       = constrain(maxUs + d * 10, 1800, 2600);
         else if (settingField == 2) centerAngle = constrain(centerAngle + d, 0, 180);
         else if (settingField == 3) sweepDurationSec = constrain(sweepDurationSec + d, 1, 10);
         if (minUs >= maxUs) minUs = maxUs - 1;  // protección cruzada
         break;
+      case SWEEP:
+        sweepDurationSec = constrain(sweepDurationSec + d, 1, 10);
+        saveSettings(); // guardar al cambiar sobre la marcha
+        break;
       default:
-        break; // SWEEP / CENTER ignore the encoder
+        break;
     }
-  }
+}
 
   // Consume button press (atomic read/clear).
   noInterrupts();
@@ -217,6 +221,16 @@ void drawServo(const char* label, int ang) {
   display.print(" us");
 
   drawGauge(ang);
+
+  // Mostrar duración solo en modo SWEEP
+  if (strcmp(label, "SWEEP") == 0) {
+    display.setCursor(0, 54);
+    display.setTextSize(1);
+    display.print("Dur: ");
+    display.print(sweepDurationSec);
+    display.print("s");
+  }
+
   display.display();
 }
 
