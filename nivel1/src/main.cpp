@@ -48,6 +48,7 @@ Preferences prefs;
 int minUs       = 100;    // pulse width (us) at 0 deg
 int maxUs       = 2000;   // pulse width (us) at 180 deg
 int centerAngle = 90;     // angle held in CENTER mode
+int sweepDurationSec = 3; // sweep duration in seconds (0->180), round-trip 2*this
 
 // Fixed angle domain.
 const int minAng = 0;
@@ -71,7 +72,7 @@ const int MENU_COUNT = 4;
 
 // SETTINGS sub-fields: 0 = minUs, 1 = maxUs, 2 = center
 int settingField = 0;
-const int SETTINGS_FIELDS = 3;
+const int SETTINGS_FIELDS = 4; // minUs, maxUs, center, sweepDuration
 
 // Live commanded angle (for display & drive).
 int angle = 90;
@@ -102,24 +103,26 @@ int angleToUs(int a) {
 
 // Triangular sweep: ~1.5 s per direction across 0..180 deg.
 int sweepAngle() {
-  unsigned long half = 1500;
+  unsigned long period = (unsigned long)sweepDurationSec * 1000;  // one-way duration in ms
   unsigned long t = millis();
-  unsigned long phase = t % (2 * half);
+  unsigned long phase = t % (2 * period);  // full round-trip period
   int a;
-  if (phase < half) a = (int)map((long)phase, 0, (long)half, 0, 180);
-  else              a = (int)map((long)phase, (long)half, 2 * (long)half, 180, 0);
+  if (phase < period) a = (int)map((long)phase, 0, (long)period, 0, 180);
+  else              a = (int)map((long)phase, (long)period, 2 * (long)period, 180, 0);
   return constrain(a, 0, 180);
 }
 
 void loadSettings() {
   prefs.begin("servotester", true);   // read-only
-  minUs       = prefs.getUInt("minUs", 500);
-  maxUs       = prefs.getUInt("maxUs", 2500);
+  minUs       = prefs.getUInt("minUs", 100);
+  maxUs       = prefs.getUInt("maxUs", 2000);
   centerAngle = prefs.getUInt("center", 90);
+  sweepDurationSec = prefs.getUInt("sweepDur", 3);
   prefs.end();
-  minUs = constrain(minUs, 400, 1500);
-  maxUs = constrain(maxUs, 1500, 2600);
+  minUs = constrain(minUs, 100, 500);
+  maxUs = constrain(maxUs, 1800, 2600);
   centerAngle = constrain(centerAngle, 0, 180);
+  sweepDurationSec = constrain(sweepDurationSec, 1, 10);
 }
 
 void saveSettings() {
@@ -127,6 +130,7 @@ void saveSettings() {
   prefs.putUInt("minUs", (unsigned int)minUs);
   prefs.putUInt("maxUs", (unsigned int)maxUs);
   prefs.putUInt("center", (unsigned int)centerAngle);
+  prefs.putUInt("sweepDur", (unsigned int)sweepDurationSec);
   prefs.end();
 }
 
@@ -147,9 +151,11 @@ void handleInput() {
         angle = constrain(angle + d, minAng, maxAng);
         break;
 case SETTINGS:
-if (settingField == 0)      minUs       = constrain(minUs + d * 10, 100, 500);
-else if (settingField == 1) maxUs       = constrain(maxUs + d * 10, 1800, 2600);
-if (minUs >= maxUs) minUs = maxUs - 1;  // protección cruzada
+        if (settingField == 0)      minUs       = constrain(minUs + d * 10, 100, 500);
+        else if (settingField == 1) maxUs       = constrain(maxUs + d * 10, 1800, 2600);
+        else if (settingField == 2) centerAngle = constrain(centerAngle + d, 0, 180);
+        else if (settingField == 3) sweepDurationSec = constrain(sweepDurationSec + d, 1, 10);
+        if (minUs >= maxUs) minUs = maxUs - 1;  // protección cruzada
         break;
       default:
         break; // SWEEP / CENTER ignore the encoder
