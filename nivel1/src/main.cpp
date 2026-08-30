@@ -214,7 +214,7 @@ void drawServo(const char* label, int ang) {
   // Ángulo a la izquierda, duración a la derecha en la misma línea
   // Usamos tamaño 2 para ambos para que entren en 128px
   display.setTextSize(2);
-  display.setCursor(15, 14);
+  display.setCursor(0, 14);
   display.print(ang);
 
   // Mostrar duración al lado derecho del ángulo
