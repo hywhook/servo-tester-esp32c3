@@ -46,7 +46,7 @@ Servo servo;
 // is the angle held in CENTER mode. Everything is stored in Preferences.
 Preferences prefs;
 int minUs       = 100;    // pulse width (us) at 0 deg
-int maxUs       = 2200;   // pulse width (us) at 180 deg
+int maxUs       = 2000;   // pulse width (us) at 180 deg
 int centerAngle = 90;     // angle held in CENTER mode
 
 // Fixed angle domain.
@@ -146,10 +146,10 @@ void handleInput() {
       case MANUAL:
         angle = constrain(angle + d, minAng, maxAng);
         break;
-      case SETTINGS:
-if (settingField == 0)      minUs       = constrain(minUs + d * 500, 100, 2200);
-else if (settingField == 1) maxUs       = constrain(maxUs + d * 500, 100, 2200);
-        else                        centerAngle = constrain(centerAngle + d, 0, 180);
+case SETTINGS:
+if (settingField == 0)      minUs       = constrain(minUs + d * 1, 100, 500);
+else if (settingField == 1) maxUs       = constrain(maxUs + d * 1, 1800, 2600);
+if (minUs >= maxUs) minUs = maxUs - 1;  // protección cruzada
         break;
       default:
         break; // SWEEP / CENTER ignore the encoder
