@@ -306,7 +306,13 @@ void loop() {
     case MANUAL:   driveAngle = angle;       break;
     case CENTER:   driveAngle = centerAngle; angle = centerAngle; break;
     case SWEEP:    driveAngle = sweepAngle(); angle = driveAngle; break;
-    case SETTINGS: driveAngle = angle;       break;
+    case SETTINGS:
+      // Servo al extremo correspondiente para ver el efecto de cada ajuste
+      if (settingField == 0)      driveAngle = 0;            // minUs -> 0°
+      else if (settingField == 1) driveAngle = 180;          // maxUs -> 180°
+      else if (settingField == 2) driveAngle = centerAngle;  // center -> center°
+      else                        driveAngle = angle;        // sweepDur -> donde esté
+      break;
     case MENU:     driveAngle = -1;          break; // servo holds last position
   }
 
