@@ -119,7 +119,7 @@ void loadSettings() {
   centerAngle = prefs.getUInt("center", 90);
   sweepDurationSec = prefs.getUInt("sweepDur", 3);
   prefs.end();
-  minUs = constrain(minUs, 100, 500);
+  minUs = constrain(minUs, 100, 2000);
   maxUs = constrain(maxUs, 1800, 2600);
   centerAngle = constrain(centerAngle, 0, 180);
   sweepDurationSec = constrain(sweepDurationSec, 1, 9);
@@ -151,7 +151,7 @@ if (d != 0) {
         angle = constrain(angle + d, minAng, maxAng);
         break;
       case SETTINGS:
-        if (settingField == 0)      minUs       = constrain(minUs + d * 10, 100, 500);
+        if (settingField == 0)      minUs       = constrain(minUs + d * 10, 100, 2000);
         else if (settingField == 1) maxUs       = constrain(maxUs + d * 10, 1800, 2600);
         else if (settingField == 2) centerAngle = constrain(centerAngle + d, 0, 180);
         else if (settingField == 3) sweepDurationSec = constrain(sweepDurationSec + d, 1, 9);
