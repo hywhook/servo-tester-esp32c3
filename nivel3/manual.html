@@ -311,158 +311,155 @@
     <h2><span class="num">05</span> Diagrama de conexión visual</h2>
     <div class="card">
       <div class="diag-wrap">
-        <svg viewBox="0 0 1000 780" role="img" aria-label="Diagrama de conexión a color del Servo Tester Nivel 3">
-          <defs>
-            <marker id="arw" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/></marker>
-            <style>
-              .bx{fill:#1e293b;stroke:#334155;stroke-width:2}
-              .bxhi{fill:#0b1220;stroke:#38bdf8;stroke-width:2.5}
-              .ttl{font-family:system-ui;font-size:14px;font-weight:700;fill:#e2e8f0}
-              .ttl2{font-family:system-ui;font-size:12px;font-weight:700;fill:#38bdf8}
-              .pin{font-family:ui-monospace,monospace;font-size:10px;fill:#94a3b8}
-              .lab{font-family:ui-monospace,monospace;font-size:9.5px;font-weight:700}
-            </style>
-          </defs>
+        <svg class="schematic" viewBox="0 0 1000 880" role="img" aria-label="Diagrama de conexion Nivel 3">
+  <rect x="0" y="0" width="1000" height="880" fill="#0b1220"/>
+  <text x="500" y="32" fill="#e2e8f0" font-family="monospace" font-size="17" font-weight="bold" text-anchor="middle">Conexiones Nivel 3 — 4 canales + INA219 + BLE</text>
 
-          <!-- ===== Rails / buses ===== -->
-          <!-- 3.3V rail (red) ESP32 3V3 -> OLED / Encoder -->
-          <path d="M440,448 L440,690 L690,690 L690,110" stroke="#f87171" stroke-width="3" fill="none" marker-end="url(#arw)"/>
-          <path d="M440,448 L440,700 L690,700 L690,276" stroke="#f87171" stroke-width="3" fill="none" marker-end="url(#arw)"/>
-          <text class="lab" x="450" y="708" fill="#f87171">3.3V</text>
+  <!-- ESP32-C3 -->
+  <rect x="60" y="110" width="200" height="560" rx="10" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+  <text x="160" y="100" fill="#e2e8f0" font-family="monospace" font-size="14" font-weight="bold" text-anchor="middle">ESP32-C3</text>
+  <g font-family="monospace" font-size="13" fill="#cbd5e1">
+    <circle cx="260" cy="145" r="4" fill="#f87171"/><text x="272" y="149">3V3</text>
+    <circle cx="260" cy="175" r="4" fill="#64748b"/><text x="272" y="179">GND</text>
+    <circle cx="260" cy="210" r="4" fill="#38bdf8"/><text x="272" y="214">GPIO6</text>
+    <circle cx="260" cy="240" r="4" fill="#a78bfa"/><text x="272" y="244">GPIO7</text>
+    <circle cx="260" cy="275" r="4" fill="#34d399"/><text x="272" y="279">GPIO4</text>
+    <circle cx="260" cy="305" r="4" fill="#2dd4bf"/><text x="272" y="309">GPIO5</text>
+    <circle cx="260" cy="335" r="4" fill="#f472b6"/><text x="272" y="339">GPIO20</text>
+    <circle cx="260" cy="370" r="4" fill="#facc15"/><text x="272" y="374">GPIO10</text>
+    <circle cx="260" cy="400" r="4" fill="#facc15"/><text x="272" y="404">GPIO1</text>
+    <circle cx="260" cy="430" r="4" fill="#facc15"/><text x="272" y="434">GPIO2</text>
+    <circle cx="260" cy="460" r="4" fill="#facc15"/><text x="272" y="464">GPIO21</text>
+    <circle cx="260" cy="495" r="4" fill="#f97316"/><text x="272" y="499">GPIO3</text>
+    <circle cx="260" cy="530" r="4" fill="#fbbf24"/><text x="272" y="534">GPIO8</text>
+  </g>
 
-          <!-- GND bus (slate) -->
-          <path d="M135,755 L960,755" stroke="#64748b" stroke-width="3" fill="none"/>
-          <path d="M135,120 L135,755" stroke="#64748b" stroke-width="3" fill="none"/>
-          <path d="M60,295 L60,755" stroke="#64748b" stroke-width="3" fill="none"/>
-          <path d="M60,560 L60,755" stroke="#64748b" stroke-width="3" fill="none"/>
-          <path d="M440,530 L440,755" stroke="#64748b" stroke-width="3" fill="none"/>
-          <path d="M320,120 L320,755" stroke="#64748b" stroke-width="3" fill="none"/>
-          <path d="M700,150 L700,755" stroke="#64748b" stroke-width="3" fill="none"/>
-          <path d="M700,310 L700,755" stroke="#64748b" stroke-width="3" fill="none"/>
-          <path d="M665,626 L665,755" stroke="#64748b" stroke-width="3" fill="none"/>
-          <path d="M855,626 L855,755" stroke="#64748b" stroke-width="3" fill="none"/>
-          <path d="M665,716 L665,755" stroke="#64748b" stroke-width="3" fill="none"/>
-          <path d="M855,716 L855,755" stroke="#64748b" stroke-width="3" fill="none"/>
-          <text class="lab" x="705" y="748" fill="#94a3b8">GND común</text>
+  <!-- Rieles -->
+  <line x1="440" y1="145" x2="440" y2="540" stroke="#f87171" stroke-width="4"/>
+  <line x1="470" y1="175" x2="470" y2="830" stroke="#64748b" stroke-width="4"/>
 
-          <!-- 5V servo supply (orange) EN SERIE: fuente -> INA219 -> servos -->
-          <path d="M135,120 L135,180" stroke="#fb923c" stroke-width="4" fill="none" marker-end="url(#arw)"/>
-          <path d="M145,340 L145,665 L960,665" stroke="#fb923c" stroke-width="4" fill="none" marker-end="url(#arw)"/>
-          <path d="M145,340 L145,690 L620,690 L620,593" stroke="#fb923c" stroke-width="3" fill="none" marker-end="url(#arw)"/>
-          <text class="lab" x="155" y="360" fill="#fb923c">5V (serie INA219)</text>
+  <!-- OLED -->
+  <rect x="560" y="120" width="340" height="110" rx="10" fill="#1e293b" stroke="#a78bfa" stroke-width="2"/>
+  <text x="730" y="112" fill="#e2e8f0" font-family="monospace" font-size="13" font-weight="bold" text-anchor="middle">OLED SSD1306 (I2C 0x3C)</text>
+  <g font-family="monospace" font-size="13" fill="#cbd5e1">
+    <circle cx="560" cy="148" r="4" fill="#38bdf8"/><text x="552" y="152" text-anchor="end">SDA</text>
+    <circle cx="560" cy="175" r="4" fill="#a78bfa"/><text x="552" y="179" text-anchor="end">SCL</text>
+    <circle cx="560" cy="205" r="4" fill="#f87171"/><text x="552" y="209" text-anchor="end">VCC</text>
+    <circle cx="560" cy="232" r="4" fill="#64748b"/><text x="552" y="236" text-anchor="end">GND</text>
+  </g>
 
-          <!-- Divisor tap (orange) -> GPIO3 (V-sense) -->
-          <path d="M145,470 L312,432" stroke="#fb923c" stroke-width="3" fill="none" marker-end="url(#arw)"/>
-          <text class="lab" x="175" y="452" fill="#fb923c">V-sense</text>
+  <!-- Encoder -->
+  <rect x="560" y="250" width="340" height="160" rx="10" fill="#1e293b" stroke="#34d399" stroke-width="2"/>
+  <text x="730" y="242" fill="#e2e8f0" font-family="monospace" font-size="13" font-weight="bold" text-anchor="middle">Encoder HW-040</text>
+  <g font-family="monospace" font-size="13" fill="#cbd5e1">
+    <circle cx="560" cy="275" r="4" fill="#34d399"/><text x="552" y="279" text-anchor="end">CLK</text>
+    <circle cx="560" cy="305" r="4" fill="#2dd4bf"/><text x="552" y="309" text-anchor="end">DT</text>
+    <circle cx="560" cy="335" r="4" fill="#f472b6"/><text x="552" y="339" text-anchor="end">SW</text>
+    <circle cx="560" cy="368" r="4" fill="#f87171"/><text x="552" y="372" text-anchor="end">+</text>
+    <circle cx="560" cy="395" r="4" fill="#64748b"/><text x="552" y="399" text-anchor="end">GND</text>
+  </g>
 
-          <!-- ===== SDA (cyan) / SCL (violet) ===== -->
-          <path d="M312,322 L260,322 L260,272 L60,272" stroke="#38bdf8" stroke-width="3" fill="none" marker-end="url(#arw)"/>
-          <path d="M312,322 L690,70" stroke="#38bdf8" stroke-width="3" fill="none" marker-end="url(#arw)"/>
-          <text class="lab" x="270" y="316" fill="#38bdf8">SDA</text>
-          <path d="M312,344 L260,344 L260,236 L60,236" stroke="#a78bfa" stroke-width="3" fill="none" marker-end="url(#arw)"/>
-          <path d="M312,344 L690,90" stroke="#a78bfa" stroke-width="3" fill="none" marker-end="url(#arw)"/>
-          <text class="lab" x="270" y="338" fill="#a78bfa">SCL</text>
+  <!-- INA219 -->
+  <rect x="560" y="430" width="340" height="150" rx="10" fill="#1e293b" stroke="#fb923c" stroke-width="2"/>
+  <text x="730" y="422" fill="#e2e8f0" font-family="monospace" font-size="13" font-weight="bold" text-anchor="middle">INA219 (en serie con 5V)</text>
+  <g font-family="monospace" font-size="13" fill="#cbd5e1">
+    <circle cx="560" cy="455" r="4" fill="#fb923c"/><text x="552" y="459" text-anchor="end">VIN+</text>
+    <circle cx="560" cy="485" r="4" fill="#fb923c"/><text x="552" y="489" text-anchor="end">VIN-</text>
+    <circle cx="560" cy="515" r="4" fill="#f87171"/><text x="552" y="519" text-anchor="end">VCC</text>
+    <circle cx="560" cy="545" r="4" fill="#64748b"/><text x="552" y="549" text-anchor="end">GND</text>
+    <circle cx="560" cy="570" r="4" fill="#a78bfa"/><text x="552" y="574" text-anchor="end">I2C</text>
+  </g>
 
-          <!-- ===== Encoder (green/teal/pink) ===== -->
-          <path d="M312,366 L312,420 L690,420 L690,216" stroke="#34d399" stroke-width="3" fill="none" marker-end="url(#arw)"/>
-          <text class="lab" x="500" y="413" fill="#34d399">CLK</text>
-          <path d="M312,388 L312,440 L690,440 L690,236" stroke="#2dd4bf" stroke-width="3" fill="none" marker-end="url(#arw)"/>
-          <text class="lab" x="500" y="433" fill="#2dd4bf">DT</text>
-          <path d="M312,410 L312,460 L690,460 L690,256" stroke="#f472b6" stroke-width="3" fill="none" marker-end="url(#arw)"/>
-          <text class="lab" x="500" y="453" fill="#f472b6">SW</text>
+  <!-- 4 Servos -->
+  <rect x="560" y="600" width="340" height="170" rx="10" fill="#1e293b" stroke="#facc15" stroke-width="2"/>
+  <text x="730" y="592" fill="#e2e8f0" font-family="monospace" font-size="13" font-weight="bold" text-anchor="middle">4 Servos (CH1..CH4)</text>
+  <g font-family="monospace" font-size="13" fill="#cbd5e1">
+    <circle cx="560" cy="620" r="4" fill="#facc15"/><text x="552" y="624" text-anchor="end">S1</text>
+    <circle cx="560" cy="650" r="4" fill="#facc15"/><text x="552" y="654" text-anchor="end">S2</text>
+    <circle cx="560" cy="680" r="4" fill="#facc15"/><text x="552" y="684" text-anchor="end">S3</text>
+    <circle cx="560" cy="710" r="4" fill="#facc15"/><text x="552" y="714" text-anchor="end">S4</text>
+    <circle cx="560" cy="740" r="4" fill="#fb923c"/><text x="552" y="744" text-anchor="end">V+</text>
+    <circle cx="560" cy="765" r="4" fill="#64748b"/><text x="552" y="769" text-anchor="end">GND</text>
+  </g>
 
-          <!-- ===== Buzzer (amber) GPIO8 ===== -->
-          <path d="M380,270 L380,120" stroke="#fbbf24" stroke-width="3" fill="none" marker-end="url(#arw)"/>
-          <text class="lab" x="386" y="200" fill="#fbbf24">GPIO8</text>
+  <!-- Buzzer -->
+  <rect x="560" y="790" width="340" height="60" rx="10" fill="#1e293b" stroke="#fbbf24" stroke-width="2"/>
+  <text x="730" y="782" fill="#e2e8f0" font-family="monospace" font-size="13" font-weight="bold" text-anchor="middle">Buzzer (GPIO8)</text>
+  <g font-family="monospace" font-size="13" fill="#cbd5e1">
+    <circle cx="560" cy="815" r="4" fill="#fbbf24"/><text x="552" y="819" text-anchor="end">SIG</text>
+    <circle cx="560" cy="838" r="4" fill="#64748b"/><text x="552" y="842" text-anchor="end">GND</text>
+  </g>
 
-          <!-- ===== Servo signals (yellow) ===== -->
-          <path d="M580,322 L600,322 L600,580 L620,580" stroke="#facc15" stroke-width="3" fill="none" marker-end="url(#arw)"/>
-          <path d="M580,350 L790,350 L790,580 L810,580" stroke="#facc15" stroke-width="3" fill="none" marker-end="url(#arw)"/>
-          <path d="M580,378 L600,378 L600,670 L620,670" stroke="#facc15" stroke-width="3" fill="none" marker-end="url(#arw)"/>
-          <path d="M580,406 L790,406 L790,670 L810,670" stroke="#facc15" stroke-width="3" fill="none" marker-end="url(#arw)"/>
-          <text class="lab" x="610" y="345" fill="#facc15">SIG CH1(GPIO10)</text>
-          <text class="lab" x="800" y="373" fill="#facc15">SIG CH2(GPIO1)</text>
-          <text class="lab" x="610" y="435" fill="#facc15">SIG CH3(GPIO2)</text>
-          <text class="lab" x="800" y="453" fill="#facc15">SIG CH4(GPIO21)</text>
+  <!-- Divisor -->
+  <rect x="300" y="520" width="150" height="60" rx="8" fill="#1e293b" stroke="#f97316" stroke-width="2"/>
+  <text x="375" y="545" fill="#e2e8f0" font-family="monospace" font-size="12" text-anchor="middle">Divisor</text>
+  <text x="375" y="562" fill="#94a3b8" font-family="monospace" font-size="11" text-anchor="middle">10k / 10k</text>
 
-          <!-- ===== Boxes ===== -->
-          <!-- Fuente 5V -->
-          <rect class="bx" x="30" y="40" width="210" height="80" rx="10" style="stroke:#fb923c"/>
-          <text class="ttl2" x="135" y="68" text-anchor="middle">Fuente 5 V</text>
-          <text class="ttl" x="135" y="92" text-anchor="middle" style="font-size:18px">≥2 A</text>
+  <!-- Fuente 5V -->
+  <rect x="60" y="620" width="200" height="80" rx="10" fill="#1e293b" stroke="#fb923c" stroke-width="2"/>
+  <text x="160" y="660" fill="#e2e8f0" font-family="monospace" font-size="13" font-weight="bold" text-anchor="middle">Fuente 5V ext.</text>
 
-          <!-- INA219 -->
-          <rect class="bxhi" x="30" y="180" width="230" height="160" rx="10"/>
-          <text class="ttl2" x="145" y="206" text-anchor="middle">INA219 (0x40)</text>
-          <text class="pin" x="45" y="228">VIN+ ← 5V fuente</text>
-          <text class="pin" x="45" y="246">VIN− → servos</text>
-          <text class="pin" x="45" y="264">SDA/SCL → (cyan/violet)</text>
-          <text class="pin" x="45" y="282">GND común</text>
-          <text class="ttl" x="145" y="312" text-anchor="middle" style="font-size:12px">EN SERIE</text>
+  <!-- Cables de senal (codo) -->
+  <g fill="none" stroke-width="3">
+    <path d="M260 210 H380 V148 H560" stroke="#38bdf8"/>
+    <path d="M260 240 H395 V175 H560" stroke="#a78bfa"/>
+    <path d="M260 275 H410 V275 H560" stroke="#34d399"/>
+    <path d="M260 305 H425 V305 H560" stroke="#2dd4bf"/>
+    <path d="M260 335 H440 V335 H560" stroke="#f472b6"/>
+    <path d="M260 370 H455 V620 H560" stroke="#facc15"/>
+    <path d="M260 400 H470 V650 H560" stroke="#facc15"/>
+    <path d="M260 430 H485 V680 H560" stroke="#facc15"/>
+    <path d="M260 460 H500 V710 H560" stroke="#facc15"/>
+    <path d="M260 530 H460 V815 H560" stroke="#fbbf24"/>
+  </g>
+  <!-- I2C a INA219 -->
+  <path d="M440 570 H560" fill="none" stroke="#a78bfa" stroke-width="3"/>
+  <!-- Power desde rieles -->
+  <g fill="none" stroke-width="3">
+    <path d="M440 205 H560" stroke="#f87171"/>
+    <path d="M440 368 H560" stroke="#f87171"/>
+    <path d="M440 515 H560" stroke="#f87171"/>
+    <path d="M470 232 H560" stroke="#64748b"/>
+    <path d="M470 395 H560" stroke="#64748b"/>
+    <path d="M470 545 H560" stroke="#64748b"/>
+    <path d="M470 765 H560" stroke="#64748b"/>
+    <path d="M470 838 H560" stroke="#64748b"/>
+  </g>
+  <!-- 5V: fuente -> divisor -> INA219 VIN+ -> servos V+ -->
+  <path d="M260 660 H300 V550 H450 V455 H560" fill="none" stroke="#fb923c" stroke-width="3"/>
+  <path d="M560 485 V740" fill="none" stroke="#fb923c" stroke-width="3"/>
+  <!-- Divisor tap a GPIO3 -->
+  <path d="M450 550 V495 H260" fill="none" stroke="#f97316" stroke-width="3"/>
 
-          <!-- Divisor -->
-          <rect class="bx" x="30" y="470" width="230" height="130" rx="10"/>
-          <text class="ttl2" x="145" y="496" text-anchor="middle">Divisor 10k/10k</text>
-          <text class="pin" x="45" y="520">mitad del 5V</text>
-          <text class="pin" x="45" y="538">→ GPIO3 (Vsense)</text>
+  <!-- Etiquetas -->
+  <g font-family="monospace" font-size="12" fill="#e2e8f0">
+    <text x="382" y="180" text-anchor="middle">SDA</text>
+    <text x="397" y="210" text-anchor="middle">SCL</text>
+    <text x="412" y="273" text-anchor="middle">CLK</text>
+    <text x="427" y="303" text-anchor="middle">DT</text>
+    <text x="442" y="333" text-anchor="middle">SW</text>
+    <text x="457" y="500" text-anchor="middle">S1-4</text>
+    <text x="462" y="680" text-anchor="middle">Buzzer</text>
+    <text x="380" y="610" text-anchor="middle" fill="#fb923c">5V->INA219->Servos</text>
+    <text x="380" y="470" text-anchor="middle" fill="#f97316">Vdiv->GPIO3</text>
+    <text x="730" y="870" text-anchor="middle" fill="#94a3b8">BLE (NimBLE) integrado: "ServoTester" — telefometria + control desde el celu</text>
+  </g>
 
-          <!-- ESP32-C3 -->
-          <rect class="bxhi" x="300" y="270" width="280" height="260" rx="14"/>
-          <text class="ttl2" x="440" y="294" text-anchor="middle">ESP32-C3 Super Mini</text>
-          <text class="pin" x="314" y="322">6 SDA</text>
-          <text class="pin" x="314" y="344">7 SCL</text>
-          <text class="pin" x="314" y="366">4 CLK</text>
-          <text class="pin" x="314" y="388">5 DT</text>
-          <text class="pin" x="314" y="410">20 SW</text>
-          <text class="pin" x="314" y="432">3 Vsense</text>
-          <text class="pin" x="566" y="322" text-anchor="end">10 CH1</text>
-          <text class="pin" x="566" y="350" text-anchor="end">1 CH2</text>
-          <text class="pin" x="566" y="378" text-anchor="end">2 CH3</text>
-          <text class="pin" x="566" y="406" text-anchor="end">21 CH4</text>
-          <text class="pin" x="566" y="448" text-anchor="end">3V3</text>
-          <text class="pin" x="566" y="478" text-anchor="end">GND</text>
-
-          <!-- Buzzer -->
-          <rect class="bx" x="300" y="40" width="210" height="80" rx="10" style="stroke:#fbbf24"/>
-          <text class="ttl2" x="405" y="66" text-anchor="middle">Buzzer</text>
-          <text class="pin" x="320" y="92">GPIO8 (activo HIGH)</text>
-
-          <!-- OLED -->
-          <rect class="bx" x="690" y="30" width="270" height="120" rx="10"/>
-          <text class="ttl2" x="825" y="56" text-anchor="middle">OLED SSD1306</text>
-          <text class="pin" x="705" y="78">SDA 0x3C</text>
-          <text class="pin" x="705" y="96">SCL</text>
-          <text class="pin" x="705" y="114">3V3 / GND</text>
-
-          <!-- Encoder -->
-          <rect class="bx" x="690" y="180" width="270" height="130" rx="10"/>
-          <text class="ttl2" x="825" y="206" text-anchor="middle">Encoder HW-040</text>
-          <text class="pin" x="705" y="230">CLK</text>
-          <text class="pin" x="705" y="248">DT</text>
-          <text class="pin" x="705" y="266">SW</text>
-          <text class="pin" x="705" y="288">3V3 / GND</text>
-
-          <!-- Servos -->
-          <g>
-            <rect class="bx" x="620" y="560" width="180" height="66" rx="10"/>
-            <text class="ttl2" x="710" y="582" text-anchor="middle">Servo CH1</text>
-            <text class="pin" x="632" y="604">SIG · V+ · GND</text>
-
-            <rect class="bx" x="810" y="560" width="180" height="66" rx="10"/>
-            <text class="ttl2" x="900" y="582" text-anchor="middle">Servo CH2</text>
-            <text class="pin" x="822" y="604">SIG · V+ · GND</text>
-
-            <rect class="bx" x="620" y="650" width="180" height="66" rx="10"/>
-            <text class="ttl2" x="710" y="672" text-anchor="middle">Servo CH3</text>
-            <text class="pin" x="632" y="694">SIG · V+ · GND</text>
-
-            <rect class="bx" x="810" y="650" width="180" height="66" rx="10"/>
-            <text class="ttl2" x="900" y="672" text-anchor="middle">Servo CH4</text>
-            <text class="pin" x="822" y="694">SIG · V+ · GND</text>
-          </g>
-
-          <text class="pin" x="600" y="775" fill="#94a3b8">INA219 EN SERIE entre la fuente 5V (naranja) y el V+ de los 4 servos (naranja). Divisor de 5V a GPIO3. OLED y encoder a 3.3V. Buzzer a GPIO8. Señales de servo amarillas a GPIO10/1/2/21.</text>
-        </svg>
+  <!-- Leyenda -->
+  <g font-family="monospace" font-size="12" fill="#cbd5e1">
+    <rect x="60" y="800" width="14" height="14" fill="#f87171"/><text x="80" y="812">3.3V</text>
+    <rect x="150" y="800" width="14" height="14" fill="#fb923c"/><text x="170" y="812">5V servo</text>
+    <rect x="260" y="800" width="14" height="14" fill="#f97316"/><text x="280" y="812">Vdiv(GPIO3)</text>
+    <rect x="410" y="800" width="14" height="14" fill="#64748b"/><text x="430" y="812">GND</text>
+    <rect x="520" y="800" width="14" height="14" fill="#38bdf8"/><text x="540" y="812">SDA</text>
+    <rect x="610" y="800" width="14" height="14" fill="#a78bfa"/><text x="630" y="812">SCL/I2C</text>
+    <rect x="720" y="800" width="14" height="14" fill="#facc15"/><text x="740" y="812">Señal servo</text>
+    <rect x="60" y="822" width="14" height="14" fill="#34d399"/><text x="80" y="834">CLK</text>
+    <rect x="150" y="822" width="14" height="14" fill="#2dd4bf"/><text x="170" y="834">DT</text>
+    <rect x="240" y="822" width="14" height="14" fill="#f472b6"/><text x="260" y="834">SW</text>
+    <rect x="340" y="822" width="14" height="14" fill="#fbbf24"/><text x="360" y="834">Buzzer</text>
+  </g>
+</svg>
       </div>
       <div class="legend">
         <span><i style="background:#f87171"></i> 3.3 V (lógica, rojo)</span>
