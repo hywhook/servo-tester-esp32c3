@@ -66,7 +66,8 @@ Adafruit_INA219 ina219;           // direccion por defecto 0x40
 Preferences prefs;
 int   minUs       = 500;
 int   maxUs       = 2500;
-int   centerAngle = 90;
+int   centerAngle    = 90;
+int   sweepDurationSec = 3;   // sweep one-way duration in seconds (1-9)
 int   iThresh     = 800;
 float vCal        = 1.0;
 
@@ -96,7 +97,7 @@ const int MENU_COUNT = 6;
 const char* menuItems[] = { "MANUAL", "SWEEP", "CENTER", "CANAL", "GRAFICO", "SETTINGS" };
 
 int settingField = 0;
-const int SETTINGS_FIELDS = 4;
+const int SETTINGS_FIELDS = 5;
 
 // ----------------------------- Analyzer sample ------------------------------
 float vServo = 0.0;
@@ -148,12 +149,12 @@ int angleToUs(int a) {
 }
 
 int sweepAngle() {
-  unsigned long half = 1500;
+  unsigned long period = (unsigned long)sweepDurationSec * 1000;
   unsigned long t = millis();
-  unsigned long phase = t % (2 * half);
+  unsigned long phase = t % (2 * period);
   int a;
-  if (phase < half) a = (int)map((long)phase, 0, (long)half, 0, 180);
-  else              a = (int)map((long)phase, (long)half, 2 * (long)half, 180, 0);
+  if (phase < period) a = (int)map((long)phase, 0, (long)period, 0, 180);
+  else               a = (int)map((long)phase, (long)period, 2 * (long)period, 180, 0);
   return constrain(a, 0, 180);
 }
 
@@ -166,12 +167,14 @@ void loadSettings() {
   minUs       = prefs.getUInt("minUs", 500);
   maxUs       = prefs.getUInt("maxUs", 2500);
   centerAngle = prefs.getUInt("center", 90);
+  sweepDurationSec = prefs.getUInt("sweepDur", 3);
   iThresh     = prefs.getUInt("iThresh", 800);
   vCal        = prefs.getFloat("vCal", 1.0);
   prefs.end();
   minUs       = constrain(minUs, 400, 1500);
   maxUs       = constrain(maxUs, 1500, 2600);
   centerAngle = constrain(centerAngle, 0, 180);
+  sweepDurationSec = constrain(sweepDurationSec, 1, 9);
   iThresh     = constrain(iThresh, 100, 5000);
   if (vCal <= 0.0 || isnan(vCal)) vCal = 1.0;
 }
@@ -181,6 +184,7 @@ void saveSettings() {
   prefs.putUInt("minUs",   (unsigned int)minUs);
   prefs.putUInt("maxUs",   (unsigned int)maxUs);
   prefs.putUInt("center",  (unsigned int)centerAngle);
+  prefs.putUInt("sweepDur",(unsigned int)sweepDurationSec);
   prefs.putUInt("iThresh", (unsigned int)iThresh);
   prefs.putFloat("vCal",   vCal);
   prefs.end();
@@ -337,10 +341,16 @@ void handleInput() {
         if (settingField == 0)      minUs       = constrain(minUs + d * 10, 400, 1500);
         else if (settingField == 1) maxUs       = constrain(maxUs + d * 10, 1500, 2600);
         else if (settingField == 2) centerAngle = constrain(centerAngle + d, 0, 180);
+        else if (settingField == 3) sweepDurationSec = constrain(sweepDurationSec + d, 1, 9);
         else                        iThresh     = constrain(iThresh + d * 50, 100, 5000);
+        if (minUs >= maxUs) minUs = maxUs - 1;
+        break;
+      case SWEEP:
+        sweepDurationSec = constrain(sweepDurationSec + d, 1, 9);
+        saveSettings();
         break;
       default:
-        break; // SWEEP / CENTER / GRAFICO ignoran el encoder
+        break; // CENTER / GRAFICO ignoran el encoder
     }
   }
 
@@ -479,6 +489,8 @@ void drawSettings() {
   display.print(settingField == 2 ? " >" : "  ");
   display.print("center: "); display.println(centerAngle);
   display.print(settingField == 3 ? " >" : "  ");
+  display.print("sweep : "); display.print(sweepDurationSec); display.println("s");
+  display.print(settingField == 4 ? " >" : "  ");
   display.print("iThrsh: "); display.print(iThresh); display.println("mA");
 
   display.setCursor(0, 56);
