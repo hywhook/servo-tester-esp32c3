@@ -165,7 +165,7 @@ void handleInput() {
   if (b) {
     switch (mode) {
       case MENU:
-        if      (menuIndex == 0) mode = MANUAL;
+        if      (menuIndex == 0) { mode = MANUAL; angle = 90; }
         else if (menuIndex == 1) mode = SWEEP;
         else if (menuIndex == 2) mode = CENTER;
         else if (menuIndex == 3) { mode = SETTINGS; settingField = 0; }
