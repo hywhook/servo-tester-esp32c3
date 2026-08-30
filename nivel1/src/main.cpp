@@ -122,7 +122,7 @@ void loadSettings() {
   minUs = constrain(minUs, 100, 500);
   maxUs = constrain(maxUs, 1800, 2600);
   centerAngle = constrain(centerAngle, 0, 180);
-  sweepDurationSec = constrain(sweepDurationSec, 1, 10);
+  sweepDurationSec = constrain(sweepDurationSec, 1, 9);
 }
 
 void saveSettings() {
@@ -154,7 +154,7 @@ if (d != 0) {
         if (settingField == 0)      minUs       = constrain(minUs + d * 10, 100, 500);
         else if (settingField == 1) maxUs       = constrain(maxUs + d * 10, 1800, 2600);
         else if (settingField == 2) centerAngle = constrain(centerAngle + d, 0, 180);
-        else if (settingField == 3) sweepDurationSec = constrain(sweepDurationSec + d, 1, 10);
+        else if (settingField == 3) sweepDurationSec = constrain(sweepDurationSec + d, 1, 9);
         if (minUs >= maxUs) minUs = maxUs - 1;  // protección cruzada
         break;
       case SWEEP:
@@ -239,12 +239,17 @@ void drawMenu() {
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(WHITE);
-  display.setCursor(0, 0);
+  
+  // Centrar título "MENU"
+  int menuWidth = strlen("MENU") * 6;  // aprox 6px/char en tamaño 1
+  display.setCursor((128 - menuWidth) / 2, 0);
   display.println("MENU");
 
   const char* items[] = { "MANUAL", "SWEEP", "CENTER", "SETTINGS" };
   for (int i = 0; i < MENU_COUNT; i++) {
-    display.setCursor(0, 14 + i * 10);
+    int itemWidth = strlen(items[i]) * 6;  // aprox 6px/char en tamaño 1
+    int itemX = (128 - itemWidth) / 2;
+    display.setCursor(itemX, 14 + i * 10);
     display.print(i == menuIndex ? "> " : "  ");
     display.println(items[i]);
   }
