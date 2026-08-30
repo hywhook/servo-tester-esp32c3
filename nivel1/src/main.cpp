@@ -222,14 +222,13 @@ void drawServo(const char* label, int ang) {
 
   drawGauge(ang);
 
-  // Mostrar duración siempre visible (aunque solo sea relevante en SWEEP)
-  // Línea de estado: "Dur: Xs" en la línea de abajo del gauge
-  display.setTextSize(1);
-  display.setCursor(0, 58);
+  // Mostrar duración con tamaño grande en la línea de estado
+  display.setTextSize(2);           // <- agrandado de 1 a 2
+  display.setCursor(0, 56);       // posición un poco más arriba
   if (strcmp(label, "SWEEP") == 0) {
     display.print("Dur: ");
     display.print(sweepDurationSec);
-    display.print("s  ");
+    display.print("s");
   } else {
     display.print("Modo: ");
     display.print(label);
