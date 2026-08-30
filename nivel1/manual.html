@@ -6,113 +6,109 @@
 <title>Servo Tester Nivel 1 — ESP32-C3 Super Mini · Manual completo</title>
 <style>
   :root {
-    --bg:        #f6f8fb;
-    --surface:   #ffffff;
-    --ink:       #1d2433;
-    --ink-soft:  #4a5468;
-    --muted:     #7c869c;
-    --line:      #e3e8f0;
-    --brand:     #2b6ef2;
-    --brand-dk:  #1c4fbd;
+    --bg:        #0f172a;
+    --panel:     #1e293b;
+    --card:      #172033;
+    --text:      #e2e8f0;
+    --muted:     #94a3b8;
+    --border:    #334155;
+    --accent:    #38bdf8;
+    --info:      #3b82f6;
+    --warn:      #f59e0b;
+    --danger:    #ef4444;
+    --ok:        #22c55e;
 
-    --info:      #1f6fd6;
-    --info-bg:   #e8f2fd;
-    --warn:      #b9790a;
-    --warn-bg:   #fdf3e0;
-    --danger:    #c8362f;
-    --danger-bg: #fdeceb;
-    --ok:        #1f8a52;
-    --ok-bg:     #e7f6ec;
-
-    --sig-3v3:   #2f9e6f;
-    --sig-gnd:   #5b6472;
-    --sig-sda:   #c0392b;
-    --sig-scl:   #d68910;
-    --sig-servo: #8e44ad;
-    --sig-clk:   #2980b9;
-    --sig-dt:    #16a085;
-    --sig-sw:    #e67e22;
+    --sig-3v3:   #f87171;
+    --sig-gnd:   #64748b;
+    --sig-sda:   #38bdf8;
+    --sig-scl:   #a78bfa;
+    --sig-servo: #facc15;
+    --sig-clk:   #34d399;
+    --sig-dt:    #2dd4bf;
+    --sig-sw:    #f472b6;
+    --sig-5v:    #f97316;
 
     --radius: 14px;
-    --shadow: 0 1px 2px rgba(20,30,60,.06), 0 6px 20px rgba(20,30,60,.07);
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 6px 20px rgba(0,0,0,.35);
     --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Noto Sans", sans-serif;
     --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   }
 
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
-  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); line-height: 1.65; font-size: 16px; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.65; font-size: 16px; }
 
   .wrap { display: flex; align-items: flex-start; gap: 28px; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
 
   .hero {
-    background: linear-gradient(135deg, #1c4fbd 0%, #2b6ef2 55%, #4f8ef7 100%);
-    color: #fff; padding: 54px 20px 46px; position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 55%, #172033 100%);
+    color: #e2e8f0; padding: 54px 20px 46px; position: relative; overflow: hidden;
+    border-bottom: 1px solid var(--border);
   }
   .hero::after { content: ""; position: absolute; inset: auto -10% -40% -10%; height: 220px;
-    background: radial-gradient(closest-side, rgba(255,255,255,.18), transparent); }
+    background: radial-gradient(closest-side, rgba(56,189,248,.18), transparent); }
   .hero-inner { max-width: 1200px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
   .hero h1 { margin: 0 0 8px; font-size: clamp(1.8rem, 3.4vw, 2.7rem); letter-spacing: -.5px; }
-  .hero p.tag { margin: 0 0 18px; font-size: 1.08rem; opacity: .95; max-width: 720px; }
+  .hero p.tag { margin: 0 0 18px; font-size: 1.08rem; opacity: .9; max-width: 720px; }
   .badges { display: flex; flex-wrap: wrap; gap: 10px; }
-  .badge { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,.16);
-    border: 1px solid rgba(255,255,255,.28); padding: 6px 12px; border-radius: 999px;
-    font-size: .82rem; font-weight: 600; backdrop-filter: blur(4px); }
-  .badge .dot { width: 8px; height: 8px; border-radius: 50%; background: #8ff0b6; }
+  .badge { display: inline-flex; align-items: center; gap: 7px; background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.18); padding: 6px 12px; border-radius: 999px;
+    font-size: .82rem; font-weight: 600; backdrop-filter: blur(4px); color: #e2e8f0; }
+  .badge .dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
 
-  nav.toc { position: sticky; top: 18px; flex: 0 0 252px; align-self: flex-start; background: var(--surface);
-    border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
+  nav.toc { position: sticky; top: 18px; flex: 0 0 252px; align-self: flex-start; background: var(--panel);
+    border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);
     padding: 16px 14px; max-height: calc(100vh - 36px); overflow: auto; }
   nav.toc h2 { font-size: .78rem; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); margin: 4px 8px 12px; }
   nav.toc ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
   nav.toc li { counter-increment: toc; }
-  nav.toc a { display: block; text-decoration: none; color: var(--ink-soft); font-size: .9rem;
+  nav.toc a { display: block; text-decoration: none; color: var(--muted); font-size: .9rem;
     padding: 7px 10px; border-radius: 9px; border-left: 3px solid transparent; transition: .15s; }
   nav.toc a::before { content: counter(toc) ". "; color: var(--muted); font-variant-numeric: tabular-nums; }
-  nav.toc a:hover { background: var(--bg); color: var(--ink); }
-  nav.toc a.active { background: var(--info-bg); color: var(--brand-dk); border-left-color: var(--brand); font-weight: 600; }
+  nav.toc a:hover { background: var(--card); color: var(--text); }
+  nav.toc a.active { background: rgba(56,189,248,.12); color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
 
   main { flex: 1 1 auto; min-width: 0; padding: 26px 0 80px; }
   section { scroll-margin-top: 18px; margin-bottom: 26px; }
-  section > h2 { font-size: 1.5rem; letter-spacing: -.3px; margin: 0 0 4px; display: flex; align-items: center; gap: 10px; }
-  section > h2 .num { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 9px; background: var(--brand);
-    color: #fff; font-size: .9rem; font-weight: 700; display: grid; place-items: center; }
-  section > .lead { color: var(--ink-soft); margin: 0 0 16px; }
+  section > h2 { font-size: 1.5rem; letter-spacing: -.3px; margin: 0 0 4px; display: flex; align-items: center; gap: 10px; color: var(--text); }
+  section > h2 .num { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 9px; background: var(--accent);
+    color: #0f172a; font-size: .9rem; font-weight: 700; display: grid; place-items: center; }
+  section > .lead { color: var(--muted); margin: 0 0 16px; }
 
-  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
     box-shadow: var(--shadow); padding: 20px 22px; margin-bottom: 16px; }
-  .card h3 { margin: 4px 0 10px; font-size: 1.12rem; }
-  .card h4 { margin: 18px 0 6px; font-size: 1rem; color: var(--brand-dk); }
+  .card h3 { margin: 4px 0 10px; font-size: 1.12rem; color: var(--text); }
+  .card h4 { margin: 18px 0 6px; font-size: 1rem; color: var(--accent); }
 
-  h3 { font-size: 1.15rem; margin: 22px 0 8px; }
+  h3 { font-size: 1.15rem; margin: 22px 0 8px; color: var(--text); }
   p { margin: 10px 0; }
   ul, ol { margin: 10px 0; padding-left: 22px; }
   li { margin: 5px 0; }
-  code { font-family: var(--mono); font-size: .88em; background: #eef1f6; padding: 1.5px 6px; border-radius: 6px; color: #25406b; }
-  strong { color: var(--ink); }
+  code { font-family: var(--mono); font-size: .88em; background: #0b1220; padding: 1.5px 6px; border-radius: 6px; color: #7dd3fc; }
+  strong { color: var(--text); }
 
   table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: .92rem; overflow: hidden; border-radius: 10px; }
-  thead th { background: var(--brand); color: #fff; text-align: left; padding: 11px 13px; font-weight: 600; font-size: .85rem; letter-spacing: .02em; }
-  tbody td { padding: 10px 13px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  tbody tr:nth-child(even) { background: #fafbfd; }
-  tbody tr:hover { background: var(--info-bg); }
+  thead th { background: #0b1220; color: var(--text); text-align: left; padding: 11px 13px; font-weight: 600; font-size: .85rem; letter-spacing: .02em; border-bottom: 2px solid var(--accent); }
+  tbody td { padding: 10px 13px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text); }
+  tbody tr:nth-child(even) { background: #182238; }
+  tbody tr:hover { background: #1f2d44; }
 
-  .callout { border-radius: 12px; padding: 14px 16px 14px 48px; position: relative; margin: 16px 0; border: 1px solid; font-size: .95rem; }
+  .callout { border-radius: 12px; padding: 14px 16px 14px 48px; position: relative; margin: 16px 0; border: 1px solid var(--border); font-size: .95rem; color: var(--text); background: var(--card); }
   .callout::before { position: absolute; left: 14px; top: 13px; font-size: 1.15rem; font-weight: 700; width: 22px; text-align: center; }
-  .callout.info   { background: var(--info-bg);   border-color: #bcdcfa; color: #13486f; }
+  .callout.info   { border-left: 4px solid var(--info);   background: rgba(59,130,246,.10); }
   .callout.info::before   { content: "i"; color: var(--info); }
-  .callout.warn   { background: var(--warn-bg);   border-color: #f3dca6; color: #7a4f06; }
+  .callout.warn   { border-left: 4px solid var(--warn);   background: rgba(245,158,11,.10); }
   .callout.warn::before   { content: "!"; color: var(--warn); }
-  .callout.danger { background: var(--danger-bg); border-color: #f3c5c2; color: #8c211c; }
+  .callout.danger { border-left: 4px solid var(--danger); background: rgba(239,68,68,.10); }
   .callout.danger::before { content: "\00d7"; color: var(--danger); }
-  .callout.ok     { background: var(--ok-bg);     border-color: #b9e6c9; color: #155f38; }
+  .callout.ok     { border-left: 4px solid var(--ok);     background: rgba(34,197,94,.10); }
   .callout.ok::before     { content: "\2713"; color: var(--ok); }
-  .callout b { color: inherit; }
+  .callout b { color: var(--text); }
 
-  pre { background: #0f1729; color: #e8eef9; border-radius: 12px; padding: 16px 18px; overflow: auto;
-    font-family: var(--mono); font-size: .82rem; line-height: 1.55; margin: 14px 0; border: 1px solid #1c2740; }
+  pre { background: #0b1220; color: #e8eef9; border-radius: 12px; padding: 16px 18px; overflow: auto;
+    font-family: var(--mono); font-size: .82rem; line-height: 1.55; margin: 14px 0; border: 1px solid var(--border); }
   pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
-  .c-com { color: #6b7c9e; font-style: italic; }
+  .c-com { color: #7c8db0; font-style: italic; }
   .c-kw  { color: #ff9d6c; }
   .c-ty  { color: #7fd6ff; }
   .c-fn  { color: #b6e3a7; }
@@ -121,50 +117,30 @@
   .c-pre { color: #ff8ab0; }
   .c-mac { color: #ffd479; }
 
-  details.codebox { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); margin: 16px 0; overflow: hidden; }
-  details.codebox > summary { cursor: pointer; padding: 13px 18px; font-weight: 600; color: var(--brand-dk);
-    background: #f1f5fd; list-style: none; user-select: none; display: flex; align-items: center; justify-content: space-between; }
+  details.codebox { border: 1px solid var(--border); border-radius: 12px; background: var(--panel); margin: 16px 0; overflow: hidden; }
+  details.codebox > summary { cursor: pointer; padding: 13px 18px; font-weight: 600; color: var(--accent);
+    background: #172033; list-style: none; user-select: none; display: flex; align-items: center; justify-content: space-between; }
   details.codebox > summary::-webkit-details-marker { display: none; }
   details.codebox > summary::after { content: "\25bc mostrar"; font-size: .82rem; color: var(--muted); font-weight: 500; }
   details.codebox[open] > summary::after { content: "\25b2 ocultar"; }
-  details.codebox[open] > pre { border-radius: 0; border: none; border-top: 1px solid var(--line); margin: 0; }
+  details.codebox[open] > pre { border-radius: 0; border: none; border-top: 1px solid var(--border); margin: 0; }
 
-  .wiring { display: grid; grid-template-columns: 1fr; gap: 0; }
-  .board { background: linear-gradient(180deg, #16213a, #0f1729); color: #dfe6f3; border-radius: 14px;
-    padding: 18px; border: 2px solid #2a3a5e; position: relative; box-shadow: var(--shadow); }
-  .board .board-title { font-weight: 700; letter-spacing: .04em; margin-bottom: 14px; color: #9fc0ff; display: flex; justify-content: space-between; }
-  .board .board-title small { color: #6b7c9e; font-weight: 500; }
-  .pins { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
-  .pin { border-radius: 9px; padding: 9px 11px; background: #0c1322; border: 1px solid #243353; position: relative; }
-  .pin .label { font-size: .72rem; color: #9fb0cf; }
-  .pin .gpio { font-weight: 700; font-size: .95rem; }
-  .pin .func { font-size: .78rem; margin-top: 2px; }
-  .pin .sline { position: absolute; right: -10px; top: 50%; width: 10px; height: 3px; transform: translateY(-50%); border-radius: 2px; }
+  .schematic { width: 100%; height: auto; background: #0b1220; border: 1px solid var(--border); border-radius: 12px; margin: 16px 0; display: block; }
 
-  .dev { display: flex; gap: 14px; align-items: stretch; margin-top: 14px; flex-wrap: wrap; }
-  .module { flex: 1 1 200px; border-radius: 12px; padding: 14px; color: #fff; box-shadow: var(--shadow); position: relative; min-height: 92px; }
-  .module h4 { margin: 0 0 6px; font-size: .95rem; }
-  .module .conn { font-family: var(--mono); font-size: .76rem; opacity: .92; line-height: 1.5; }
-  .module .tag { position: absolute; top: 10px; right: 12px; font-size: .68rem; background: rgba(0,0,0,.28); padding: 2px 7px; border-radius: 6px; }
-  .m-oled  { background: linear-gradient(135deg,#b13b3b,#7e2b2b); }
-  .m-enc   { background: linear-gradient(135deg,#1f7a8c,#155f6e); }
-  .m-servo { background: linear-gradient(135deg,#7d4ba0,#5a3476); }
-  .m-pwr   { background: linear-gradient(135deg,#2f8f5b,#216b43); }
-
-  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
-  .legend span { display: inline-flex; align-items: center; gap: 7px; font-size: .82rem; color: var(--ink-soft); }
-  .legend i { width: 18px; height: 4px; border-radius: 2px; display: inline-block; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; font-size: .82rem; color: var(--muted); }
+  .legend i { width: 22px; height: 4px; border-radius: 2px; display: inline-block; }
 
   .flow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 12px 0; }
-  .chip { background: var(--info-bg); color: var(--brand-dk); border: 1px solid #bcdcfa; padding: 7px 13px; border-radius: 9px; font-weight: 600; font-size: .9rem; }
-  .chip.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .chip { background: #172033; color: var(--muted); border: 1px solid var(--border); padding: 7px 13px; border-radius: 9px; font-weight: 600; font-size: .9rem; }
+  .chip.active { background: var(--accent); color: #0f172a; border-color: var(--accent); }
   .chip small { display: block; font-weight: 500; font-size: .72rem; opacity: .8; }
   .arrow { color: var(--muted); font-weight: 700; }
 
   .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 14px; }
-  .mode-card { border: 1px solid var(--line); border-radius: 12px; padding: 15px; background: #fff; box-shadow: var(--shadow); border-top: 4px solid var(--brand); }
-  .mode-card h4 { margin: 0 0 6px; font-size: 1.02rem; }
-  .mode-card p { margin: 6px 0 0; font-size: .9rem; color: var(--ink-soft); }
+  .mode-card { border: 1px solid var(--border); border-radius: 12px; padding: 15px; background: var(--card); box-shadow: var(--shadow); border-top: 4px solid var(--accent); }
+  .mode-card h4 { margin: 0 0 6px; font-size: 1.02rem; color: var(--text); }
+  .mode-card p { margin: 6px 0 0; font-size: .9rem; color: var(--muted); }
 
   .footer-note { text-align: center; color: var(--muted); font-size: .85rem; padding: 30px 20px 10px; }
 
@@ -287,6 +263,7 @@
         <div class="callout info">Un detent = ±1° en MANUAL, o ±10&nbsp;µs / ±1° en SETTINGS. El debounce por marca de tiempo (5&nbsp;ms en CLK, 50&nbsp;ms en SW) filtra el rebote mecánico.</div>
       </div>
     </section>
+
     <!-- 3. BOM -->
     <section id="bom">
       <h2><span class="num">3</span> Lista de materiales (BOM)</h2>
@@ -329,7 +306,7 @@
             <tr><td><b>GPIO20</b></td><td>Encoder SW (pulsador)</td><td>SW del HW-040</td><td style="border-left:3px solid var(--sig-sw)">Interrupción FALLING + debounce 50&nbsp;ms.</td></tr>
             <tr><td><b>GND</b></td><td>Masa común</td><td>OLED, encoder, servo y fuente 5&nbsp;V</td><td style="border-left:3px solid var(--sig-gnd)">¡Debe ser única y compartida por todos!</td></tr>
             <tr><td><b>3V3</b></td><td>3.3&nbsp;V</td><td>VCC de la OLED y del encoder</td><td style="border-left:3px solid var(--sig-3v3)">Salida del regulador del C3.</td></tr>
-            <tr><td><b>5V ext.</b></td><td>5&nbsp;V externos</td><td>VCC (rojo) del servo</td><td style="border-left:3px solid var(--sig-servo)">Desde fuente externa, NO del 3V3 de la placa.</td></tr>
+            <tr><td><b>5V ext.</b></td><td>5&nbsp;V externos</td><td>VCC (rojo) del servo</td><td style="border-left:3px solid var(--sig-5v)">Desde fuente externa, NO del 3V3 de la placa.</td></tr>
           </tbody>
         </table>
         <div class="legend">
@@ -341,6 +318,7 @@
           <span><i style="background:var(--sig-clk)"></i> CLK</span>
           <span><i style="background:var(--sig-dt)"></i> DT</span>
           <span><i style="background:var(--sig-sw)"></i> SW</span>
+          <span><i style="background:var(--sig-5v)"></i> 5V ext.</span>
         </div>
       </div>
     </section>
@@ -348,83 +326,153 @@
     <!-- 5. WIRING -->
     <section id="wiring">
       <h2><span class="num">5</span> Diagrama de conexión</h2>
-      <p class="lead">Representación visual coloreada por tipo de señal.</p>
+      <p class="lead">Esquema de circuito coloreado por tipo de señal (sin assets externos).</p>
       <div class="card">
-        <div class="wiring">
-          <div class="board">
-            <div class="board-title">ESP32-C3 Super Mini <small>lógica 3.3&nbsp;V</small></div>
-            <div class="pins">
-              <div class="pin"><div class="label">GPIO6</div><div class="gpio">6</div><div class="func">OLED SDA</div><span class="sline" style="background:var(--sig-sda)"></span></div>
-              <div class="pin"><div class="label">GPIO7</div><div class="gpio">7</div><div class="func">OLED SCL</div><span class="sline" style="background:var(--sig-scl)"></span></div>
-              <div class="pin"><div class="label">GPIO10</div><div class="gpio">10</div><div class="func">Señal servo</div><span class="sline" style="background:var(--sig-servo)"></span></div>
-              <div class="pin"><div class="label">GPIO4</div><div class="gpio">4</div><div class="func">ENC CLK</div><span class="sline" style="background:var(--sig-clk)"></span></div>
-              <div class="pin"><div class="label">GPIO5</div><div class="gpio">5</div><div class="func">ENC DT</div><span class="sline" style="background:var(--sig-dt)"></span></div>
-              <div class="pin"><div class="label">GPIO20</div><div class="gpio">20</div><div class="func">ENC SW</div><span class="sline" style="background:var(--sig-sw)"></span></div>
-              <div class="pin"><div class="label">3V3</div><div class="gpio">3V3</div><div class="func">salida reg.</div><span class="sline" style="background:var(--sig-3v3)"></span></div>
-              <div class="pin"><div class="label">GND</div><div class="gpio">GND</div><div class="func">masa común</div><span class="sline" style="background:var(--sig-gnd)"></span></div>
-            </div>
-          </div>
+        <svg class="schematic" viewBox="0 0 1060 640" role="img" aria-label="Esquema de conexión ESP32-C3, OLED, encoder y servo">
+          <!-- fondo -->
+          <rect x="0" y="0" width="1060" height="640" fill="#0b1220"/>
 
-          <div class="dev">
-            <div class="module m-oled">
-              <span class="tag">I²C 0x3C</span>
-              <h4>OLED SSD1306</h4>
-              <div class="conn">VCC → 3V3<br>SDA → GPIO6<br>SCL → GPIO7<br>GND → GND</div>
-            </div>
-            <div class="module m-enc">
-              <span class="tag">HW-040</span>
-              <h4>Encoder rotatorio</h4>
-              <div class="conn">VCC → 3V3<br>CLK → GPIO4<br>DT&nbsp;&nbsp;→ GPIO5<br>SW&nbsp;&nbsp;→ GPIO20<br>GND → GND</div>
-            </div>
-            <div class="module m-servo">
-              <span class="tag">50 Hz</span>
-              <h4>Servo de hobby</h4>
-              <div class="conn">Señal (naranja) → GPIO10<br>VCC (rojo) → 5V ext.<br>GND (marrón) → GND</div>
-            </div>
-            <div class="module m-pwr">
-              <span class="tag">externa</span>
-              <h4>Fuente 5&nbsp;V</h4>
-              <div class="conn">+5V → VCC servo<br>GND → GND (común)</div>
-            </div>
-          </div>
-        </div>
+          <!-- Cajas de dispositivos -->
+          <!-- ESP32-C3 (centro) -->
+          <rect x="410" y="220" width="240" height="180" rx="10" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+          <text x="530" y="208" fill="#e2e8f0" font-family="monospace" font-size="15" font-weight="bold" text-anchor="middle">ESP32-C3 Super Mini</text>
+
+          <!-- OLED (izquierda) -->
+          <rect x="40" y="240" width="230" height="210" rx="10" fill="#1e293b" stroke="#a78bfa" stroke-width="2"/>
+          <text x="155" y="262" fill="#e2e8f0" font-family="monospace" font-size="14" font-weight="bold" text-anchor="middle">OLED SSD1306</text>
+          <text x="155" y="280" fill="#94a3b8" font-family="monospace" font-size="11" text-anchor="middle">I²C 0x3C</text>
+
+          <!-- Encoder (arriba derecha) -->
+          <rect x="720" y="40" width="240" height="150" rx="10" fill="#1e293b" stroke="#34d399" stroke-width="2"/>
+          <text x="840" y="62" fill="#e2e8f0" font-family="monospace" font-size="14" font-weight="bold" text-anchor="middle">Encoder HW-040</text>
+
+          <!-- Servo (abajo derecha) -->
+          <rect x="720" y="410" width="240" height="150" rx="10" fill="#1e293b" stroke="#facc15" stroke-width="2"/>
+          <text x="840" y="432" fill="#e2e8f0" font-family="monospace" font-size="14" font-weight="bold" text-anchor="middle">Servo de hobby</text>
+
+          <!-- Fuente 5V (abajo izquierda) -->
+          <rect x="40" y="410" width="230" height="150" rx="10" fill="#1e293b" stroke="#f97316" stroke-width="2"/>
+          <text x="155" y="432" fill="#e2e8f0" font-family="monospace" font-size="14" font-weight="bold" text-anchor="middle">Fuente 5 V ext.</text>
+
+          <!-- HILOS: OLED (izquierda) -->
+          <!-- SDA cyan -->
+          <line x1="410" y1="260" x2="270" y2="330" stroke="#38bdf8" stroke-width="3"/>
+          <text x="320" y="285" fill="#cbd5e1" font-family="monospace" font-size="11" text-anchor="middle">SDA</text>
+          <text x="358" y="258" fill="#94a3b8" font-family="monospace" font-size="11" text-anchor="end">GPIO6</text>
+          <!-- SCL violet -->
+          <line x1="410" y1="290" x2="270" y2="360" stroke="#a78bfa" stroke-width="3"/>
+          <text x="320" y="320" fill="#cbd5e1" font-family="monospace" font-size="11" text-anchor="middle">SCL</text>
+          <text x="358" y="288" fill="#94a3b8" font-family="monospace" font-size="11" text-anchor="end">GPIO7</text>
+          <!-- 3V3 red -->
+          <line x1="410" y1="355" x2="270" y2="300" stroke="#f87171" stroke-width="3"/>
+          <text x="320" y="350" fill="#cbd5e1" font-family="monospace" font-size="11" text-anchor="middle">3V3</text>
+          <text x="358" y="358" fill="#94a3b8" font-family="monospace" font-size="11" text-anchor="end">3V3</text>
+          <!-- GND slate -->
+          <line x1="410" y1="385" x2="270" y2="390" stroke="#64748b" stroke-width="3"/>
+          <text x="320" y="385" fill="#cbd5e1" font-family="monospace" font-size="11" text-anchor="middle">GND</text>
+          <text x="358" y="388" fill="#94a3b8" font-family="monospace" font-size="11" text-anchor="end">GND</text>
+
+          <!-- HILOS: Encoder (arriba) -->
+          <!-- CLK green -->
+          <line x1="450" y1="220" x2="940" y2="190" stroke="#34d399" stroke-width="3"/>
+          <text x="700" y="200" fill="#cbd5e1" font-family="monospace" font-size="11" text-anchor="middle">CLK</text>
+          <!-- DT teal -->
+          <line x1="485" y1="220" x2="900" y2="190" stroke="#2dd4bf" stroke-width="3"/>
+          <text x="690" y="180" fill="#cbd5e1" font-family="monospace" font-size="11" text-anchor="middle">DT</text>
+          <!-- SW pink -->
+          <line x1="520" y1="220" x2="850" y2="190" stroke="#f472b6" stroke-width="3"/>
+          <text x="685" y="160" fill="#cbd5e1" font-family="monospace" font-size="11" text-anchor="middle">SW</text>
+          <!-- 3V3 red -->
+          <line x1="590" y1="220" x2="760" y2="190" stroke="#f87171" stroke-width="3"/>
+          <text x="665" y="180" fill="#cbd5e1" font-family="monospace" font-size="11" text-anchor="middle">3V3</text>
+          <!-- GND slate -->
+          <line x1="620" y1="220" x2="800" y2="190" stroke="#64748b" stroke-width="3"/>
+          <text x="705" y="240" fill="#cbd5e1" font-family="monospace" font-size="11" text-anchor="middle">GND</text>
+          <!-- etiquetas pines ESP arriba -->
+          <text x="450" y="212" fill="#94a3b8" font-family="monospace" font-size="11" text-anchor="middle">GPIO4</text>
+          <text x="485" y="212" fill="#94a3b8" font-family="monospace" font-size="11" text-anchor="middle">GPIO5</text>
+          <text x="520" y="212" fill="#94a3b8" font-family="monospace" font-size="11" text-anchor="middle">GPIO20</text>
+          <text x="590" y="212" fill="#94a3b8" font-family="monospace" font-size="11" text-anchor="middle">3V3</text>
+          <text x="620" y="212" fill="#94a3b8" font-family="monospace" font-size="11" text-anchor="middle">GND</text>
+
+          <!-- HILOS: Servo (derecha) -->
+          <!-- Señal servo yellow -->
+          <line x1="650" y1="290" x2="770" y2="410" stroke="#facc15" stroke-width="3"/>
+          <text x="700" y="345" fill="#cbd5e1" font-family="monospace" font-size="11" text-anchor="middle">Señal</text>
+          <text x="658" y="294" fill="#94a3b8" font-family="monospace" font-size="11" text-anchor="start">GPIO10</text>
+          <!-- GND slate -->
+          <line x1="650" y1="390" x2="890" y2="410" stroke="#64748b" stroke-width="3"/>
+          <text x="770" y="398" fill="#cbd5e1" font-family="monospace" font-size="11" text-anchor="middle">GND</text>
+
+          <!-- HILOS: Fuente 5V (abajo izquierda) -->
+          <!-- +5V orange a servo V+ (ruta por abajo) -->
+          <path d="M270 460 L270 600 L830 600 L830 410" fill="none" stroke="#f97316" stroke-width="3"/>
+          <text x="430" y="592" fill="#cbd5e1" font-family="monospace" font-size="11" text-anchor="middle">5V externa → V+ servo</text>
+          <!-- GND slate común (vertical izquierda) -->
+          <line x1="270" y1="500" x2="270" y2="390" stroke="#64748b" stroke-width="3"/>
+          <text x="285" y="460" fill="#cbd5e1" font-family="monospace" font-size="11" text-anchor="start">GND común</text>
+
+          <!-- Puntos de pin en ESP32 -->
+          <circle cx="410" cy="260" r="4" fill="#38bdf8"/>
+          <circle cx="410" cy="290" r="4" fill="#a78bfa"/>
+          <circle cx="410" cy="355" r="4" fill="#f87171"/>
+          <circle cx="410" cy="385" r="4" fill="#64748b"/>
+          <circle cx="450" cy="220" r="4" fill="#34d399"/>
+          <circle cx="485" cy="220" r="4" fill="#2dd4bf"/>
+          <circle cx="520" cy="220" r="4" fill="#f472b6"/>
+          <circle cx="590" cy="220" r="4" fill="#f87171"/>
+          <circle cx="620" cy="220" r="4" fill="#64748b"/>
+          <circle cx="650" cy="290" r="4" fill="#facc15"/>
+          <circle cx="650" cy="390" r="4" fill="#64748b"/>
+        </svg>
 
         <div class="legend">
-          <span><i style="background:var(--sig-3v3)"></i> 3.3&nbsp;V (lógica)</span>
-          <span><i style="background:var(--sig-gnd)"></i> GND (masa común)</span>
-          <span><i style="background:var(--sig-sda)"></i> SDA</span>
-          <span><i style="background:var(--sig-scl)"></i> SCL</span>
-          <span><i style="background:var(--sig-servo)"></i> Señal servo</span>
-          <span><i style="background:var(--sig-clk)"></i> CLK</span>
-          <span><i style="background:var(--sig-dt)"></i> DT</span>
-          <span><i style="background:var(--sig-sw)"></i> SW</span>
+          <span><i style="background:#f87171"></i> 3.3 V (rojo)</span>
+          <span><i style="background:#64748b"></i> GND (slate)</span>
+          <span><i style="background:#38bdf8"></i> SDA (cyan)</span>
+          <span><i style="background:#a78bfa"></i> SCL (violet)</span>
+          <span><i style="background:#facc15"></i> Señal servo (amarillo)</span>
+          <span><i style="background:#34d399"></i> Encoder CLK (verde)</span>
+          <span><i style="background:#2dd4bf"></i> Encoder DT (teal)</span>
+          <span><i style="background:#f472b6"></i> Encoder SW (rosa)</span>
+          <span><i style="background:#f97316"></i> 5V servo (naranja, externa)</span>
         </div>
+
+        <div class="callout danger"><b>GND común obligatorio.</b> Une físicamente el GND de la placa, OLED, encoder, servo y fuente de 5&nbsp;V. Es el error nº&nbsp;1 de "el servo no se mueve". El V+ del servo (naranja) viene de la fuente externa, no del 3V3 de la placa.</div>
+
+        <h4>Resumen de conexiones</h4>
+        <ul>
+          <li><b>OLED:</b> VCC → 3V3, GND → GND, SDA → GPIO6, SCL → GPIO7.</li>
+          <li><b>Encoder HW-040:</b> + → 3V3, GND → GND, CLK → GPIO4, DT → GPIO5, SW → GPIO20.</li>
+          <li><b>Servo:</b> señal (amarillo) → GPIO10, V+ (rojo) → 5V externa, GND (marrón) → GND.</li>
+        </ul>
 
         <h4>Apoyo ASCII (mismas conexiones)</h4>
         <pre><code>                 ESP32-C3 Super Mini
-             +--------------------------+
-    USB-C --&gt;|                          |
-             |  3V3 ---+--------+       |
-             |         |        |       |
-             |  GPIO6 -+-- SDA  |       |
-             |  GPIO7 -+-- SCL  |  OLED SSD1306 (I2C, 0x3C)
-             |  GND  --+-- GND  |       |
-             |         |        |       |
-             |  GPIO4 -+-- CLK  |       |
-             |  GPIO5 -+-- DT   |  HW-040 encoder
-             |  GPIO20-+-- SW   |       |
-             |  GND  --+-- GND  |       |
-             |         |        |       |
-             |  GPIO10-+-- SIGNAL SERVO |  (naranja/amarillo)
-             |  GND  --+-- GND  |       |
-             +---------+--------+-------+      +-------------------+
-                                             | Fuente 5V externa |
-                                             |  +5V --&gt; VCC servo |
-                                             |  GND --&gt; GND servo |
-                                             +-------------------+</code></pre>
+              +--------------------------+
+     USB-C -->|                          |
+              |  3V3 ---+--------+       |
+              |         |        |       |
+              |  GPIO6 -+-- SDA  |       |
+              |  GPIO7 -+-- SCL  |  OLED SSD1306 (I2C, 0x3C)
+              |  GND  --+-- GND  |       |
+              |         |        |       |
+              |  GPIO4 -+-- CLK  |       |
+              |  GPIO5 -+-- DT   |  HW-040 encoder
+              |  GPIO20-+-- SW   |       |
+              |  GND  --+-- GND  |       |
+              |         |        |       |
+              |  GPIO10-+-- SIGNAL SERVO |  (naranja/amarillo)
+              |  GND  --+-- GND  |       |
+              +---------+--------+-------+      +-------------------+
+                                              | Fuente 5V externa |
+                                              |  +5V --&gt; VCC servo |
+                                              |  GND --&gt; GND servo |
+                                              +-------------------+</code></pre>
         <div class="callout info"><b>Masa común:</b> el GND de la placa, OLED, encoder, servo y fuente de 5&nbsp;V <b>deben estar unidos físicamente</b>. Sin eso, la señal de 3.3&nbsp;V no tiene referencia.</div>
       </div>
     </section>
+
     <!-- 6. MODOS -->
     <section id="modos">
       <h2><span class="num">6</span> Explicación de cada modo</h2>
@@ -759,9 +807,9 @@ Mode mode = MENU;
   <span class="c-fn">loadSettings</span>();
   servo.<span class="c-fn">attach</span>(SERVO_PIN, minUs, maxUs);
 
-  <span class="c-fn">pinMode</span>(ENC_CLK, INPUT_PULLUP);
-  <span class="c-fn">pinMode</span>(ENC_DT,  INPUT_PULLUP);
-  <span class="c-fn">pinMode</span>(ENC_SW,  INPUT_PULLUP);
+  pinMode(ENC_CLK, INPUT_PULLUP);
+  pinMode(ENC_DT,  INPUT_PULLUP);
+  pinMode(ENC_SW,  INPUT_PULLUP);
   <span class="c-fn">attachInterrupt</span>(<span class="c-fn">digitalPinToInterrupt</span>(ENC_CLK), encoderISR, CHANGE);
   <span class="c-fn">attachInterrupt</span>(<span class="c-fn">digitalPinToInterrupt</span>(ENC_SW),  buttonISR, FALLING);
 
@@ -799,6 +847,7 @@ Mode mode = MENU;
         </details>
       </div>
     </section>
+
     <!-- 8. CALIB -->
     <section id="calib">
       <h2><span class="num">8</span> Calibración de límites</h2>

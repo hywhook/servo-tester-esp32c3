@@ -6,35 +6,31 @@
 <title>Servo Tester Nivel 2 — ESP32-C3 Super Mini (con analizador)</title>
 <style>
   :root {
-    --bg: #f6f8fb;
-    --bg-card: #ffffff;
-    --bg-soft: #eef2f7;
-    --ink: #1c2430;
-    --ink-soft: #51607a;
-    --border: #d8e0ec;
-    --accent: #2563eb;
-    --accent-soft: #dbeafe;
-    --info: #2563eb;
-    --info-bg: #e8f0fe;
-    --warn: #d97706;
-    --warn-bg: #fef3c7;
-    --danger: #dc2626;
-    --danger-bg: #fee2e2;
-    --ok: #16a34a;
-    --ok-bg: #dcfce7;
-    --code-bg: #0f172a;
-    --code-ink: #e2e8f0;
-    --shade-3v3: #f59e0b;
-    --shade-gnd: #475569;
-    --shade-sda: #10b981;
-    --shade-scl: #059669;
-    --shade-sig: #ef4444;
-    --shade-enc: #8b5cf6;
-    --shade-vs: #0ea5e9;
-    --shade-ina: #ec4899;
-    --shade-buzz: #f97316;
-    --shadow: 0 1px 3px rgba(16,24,40,.08), 0 8px 24px rgba(16,24,40,.06);
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --card: #172033;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --border: #334155;
+    --accent: #38bdf8;
+    --info: #3b82f6;
+    --warn: #f59e0b;
+    --danger: #ef4444;
+    --ok: #22c55e;
+    --code-bg: #0b1220;
     --radius: 14px;
+    --shade-3v3: #f87171;
+    --shade-gnd: #64748b;
+    --shade-sda: #38bdf8;
+    --shade-scl: #a78bfa;
+    --shade-sig: #facc15;
+    --shade-clk: #34d399;
+    --shade-dt:  #2dd4bf;
+    --shade-sw:  #f472b6;
+    --shade-vs:  #fb923c;
+    --shade-ina: #fb923c;
+    --shade-buzz:#fbbf24;
+    --shadow: 0 1px 3px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
@@ -42,7 +38,7 @@
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background: var(--bg);
-    color: var(--ink);
+    color: var(--text);
     line-height: 1.6;
     font-size: 16px;
   }
@@ -50,50 +46,50 @@
   a:hover { text-decoration: underline; }
   .wrap { display: flex; gap: 28px; max-width: 1280px; margin: 0 auto; padding: 0 20px; }
   .toc { position: sticky; top: 0; align-self: flex-start; width: 260px; flex: 0 0 260px; height: 100vh; overflow-y: auto; padding: 28px 12px 40px 0; }
-  .toc h3 { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); margin: 0 0 10px 8px; }
+  .toc h3 { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px 8px; }
   .toc ol { list-style: none; margin: 0; padding: 0; }
   .toc li { margin: 0; }
-  .toc a { display: block; padding: 7px 12px; border-radius: 8px; color: var(--ink-soft); font-size: 14px; border-left: 3px solid transparent; }
-  .toc a:hover { background: var(--bg-soft); text-decoration: none; }
-  .toc a.active { background: var(--accent-soft); color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+  .toc a { display: block; padding: 7px 12px; border-radius: 8px; color: var(--muted); font-size: 14px; border-left: 3px solid transparent; }
+  .toc a:hover { background: var(--panel); text-decoration: none; }
+  .toc a.active { background: rgba(56,189,248,.12); color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
   .toc ol ol { margin-left: 10px; }
   .toc ol ol a { font-size: 13px; }
   .content { flex: 1 1 auto; min-width: 0; padding: 28px 0 80px; }
-  .hero { background: linear-gradient(135deg, #1e293b 0%, #2563eb 100%); color: #fff; border-radius: var(--radius); padding: 40px 36px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .hero { background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%); color: #fff; border-radius: var(--radius); padding: 40px 36px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
   .hero::after { content: ""; position: absolute; right: -60px; top: -60px; width: 240px; height: 240px; background: radial-gradient(circle, rgba(255,255,255,.18), transparent 70%); border-radius: 50%; }
   .hero h1 { margin: 0 0 8px; font-size: 30px; line-height: 1.2; }
   .hero p { margin: 0; font-size: 17px; opacity: .92; max-width: 640px; }
   .badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
-  .badge { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.25); padding: 6px 13px; border-radius: 999px; font-size: 13px; font-weight: 600; backdrop-filter: blur(4px); }
+  .badge { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); padding: 6px 13px; border-radius: 999px; font-size: 13px; font-weight: 600; backdrop-filter: blur(4px); }
   .badge b { color: #fde68a; }
-  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px 30px; margin: 22px 0; box-shadow: var(--shadow); }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px 30px; margin: 22px 0; box-shadow: var(--shadow); }
   section { scroll-margin-top: 16px; }
-  h2 { font-size: 23px; margin: 4px 0 16px; padding-bottom: 10px; border-bottom: 2px solid var(--bg-soft); }
-  h3 { font-size: 18px; margin: 22px 0 10px; color: #1f2a3a; }
-  h4 { font-size: 15px; margin: 16px 0 8px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .04em; }
+  h2 { font-size: 23px; margin: 4px 0 16px; padding-bottom: 10px; border-bottom: 2px solid var(--panel); color: var(--text); }
+  h3 { font-size: 18px; margin: 22px 0 10px; color: #f1f5f9; }
+  h4 { font-size: 15px; margin: 16px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
   p { margin: 10px 0; }
   ul, ol { padding-left: 22px; }
   li { margin: 5px 0; }
-  code { background: var(--bg-soft); padding: 2px 6px; border-radius: 5px; font-size: 13.5px; font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; color: #b4243a; }
-  strong { color: #14213d; }
+  code { background: var(--panel); padding: 2px 6px; border-radius: 5px; font-size: 13.5px; font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; color: #fca5a5; }
+  strong { color: #f8fafc; }
   table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 14.5px; }
-  caption { text-align: left; font-weight: 700; color: var(--ink-soft); margin-bottom: 8px; font-size: 14px; }
+  caption { text-align: left; font-weight: 700; color: var(--muted); margin-bottom: 8px; font-size: 14px; }
   th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
-  thead th { background: var(--accent); color: #fff; font-weight: 600; }
+  thead th { background: var(--info); color: #fff; font-weight: 600; }
   thead th:first-child { border-top-left-radius: 8px; }
   thead th:last-child { border-top-right-radius: 8px; }
-  tbody tr:nth-child(even) { background: var(--bg-soft); }
-  tbody tr:hover { background: var(--accent-soft); }
+  tbody tr:nth-child(even) { background: rgba(148,163,184,.06); }
+  tbody tr:hover { background: rgba(56,189,248,.08); }
   .callout { border-radius: 10px; padding: 14px 18px 14px 16px; margin: 16px 0; border-left: 5px solid; display: flex; gap: 12px; align-items: flex-start; }
   .callout .ico { font-size: 18px; line-height: 1.4; flex: 0 0 auto; }
   .callout .body { flex: 1 1 auto; }
   .callout .body p { margin: 4px 0; }
-  .callout.info { background: var(--info-bg); border-color: var(--info); }
-  .callout.warn { background: var(--warn-bg); border-color: var(--warn); }
-  .callout.danger { background: var(--danger-bg); border-color: var(--danger); }
-  .callout.ok { background: var(--ok-bg); border-color: var(--ok); }
+  .callout.info { background: rgba(59,130,246,.12); border-color: var(--info); }
+  .callout.warn { background: rgba(245,158,11,.12); border-color: var(--warn); }
+  .callout.danger { background: rgba(239,68,68,.12); border-color: var(--danger); }
+  .callout.ok { background: rgba(34,197,94,.12); border-color: var(--ok); }
   .callout b { color: inherit; }
-  pre { background: var(--code-bg); color: var(--code-ink); padding: 18px 20px; border-radius: 10px; overflow-x: auto; font-size: 13px; line-height: 1.55; margin: 14px 0; font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+  pre { background: var(--code-bg); color: var(--text); padding: 18px 20px; border-radius: 10px; overflow-x: auto; font-size: 13px; line-height: 1.55; margin: 14px 0; font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
   pre code { background: none; color: inherit; padding: 0; }
   .tk-com { color: #7dd3fc; font-style: italic; }
   .tk-key { color: #fca5a5; }
@@ -101,23 +97,25 @@
   .tk-num { color: #86efac; }
   .tk-pre { color: #c4b5fd; }
   .tk-fn  { color: #93c5fd; }
-  details { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; margin: 14px 0; }
+  details { background: var(--card); border: 1px solid var(--border); border-radius: 10px; margin: 14px 0; }
   details > summary { cursor: pointer; padding: 12px 16px; font-weight: 600; color: var(--accent); }
   details[open] > summary { border-bottom: 1px solid var(--border); }
   details pre { border-radius: 0 0 10px 10px; margin: 0; }
   .pin-sig { font-weight: 700; }
-  .s-3v3 { color: var(--shade-3v3); } .bg-3v3 { background: #fff7e6; }
-  .s-gnd { color: var(--shade-gnd); } .bg-gnd { background: #eef2f7; }
-  .s-sda { color: var(--shade-sda); } .bg-sda { background: #e7f9f1; }
-  .s-scl { color: var(--shade-scl); } .bg-scl { background: #e6f7f1; }
-  .s-sig { color: var(--shade-sig); } .bg-sig { background: #fdebec; }
-  .s-enc { color: var(--shade-enc); } .bg-enc { background: #f3eefe; }
-  .s-vs  { color: var(--shade-vs); } .bg-vs  { background: #e8f7fe; }
-  .s-ina { color: var(--shade-ina); } .bg-ina { background: #fdeaf4; }
-  .s-buzz{ color: var(--shade-buzz);} .bg-buzz{ background: #fff2e6; }
+  .s-3v3 { color: var(--shade-3v3); } .bg-3v3 { background: rgba(248,113,113,.14); }
+  .s-gnd { color: var(--shade-gnd); } .bg-gnd { background: rgba(100,116,139,.18); }
+  .s-sda { color: var(--shade-sda); } .bg-sda { background: rgba(56,189,248,.12); }
+  .s-scl { color: var(--shade-scl); } .bg-scl { background: rgba(167,139,250,.12); }
+  .s-sig { color: var(--shade-sig); } .bg-sig { background: rgba(250,204,21,.12); }
+  .s-clk { color: var(--shade-clk); } .bg-clk { background: rgba(52,211,153,.12); }
+  .s-dt  { color: var(--shade-dt); }  .bg-dt  { background: rgba(45,212,191,.12); }
+  .s-sw  { color: var(--shade-sw); }  .bg-sw  { background: rgba(244,114,182,.12); }
+  .s-vs  { color: var(--shade-vs); }  .bg-vs  { background: rgba(251,146,60,.14); }
+  .s-ina { color: var(--shade-ina); } .bg-ina { background: rgba(251,146,60,.14); }
+  .s-buzz{ color: var(--shade-buzz);} .bg-buzz{ background: rgba(251,191,36,.14); }
   .diagram { background: #0b1220; border-radius: 12px; padding: 22px; color: #cbd5e1; overflow-x: auto; }
   .diagram svg { width: 100%; height: auto; min-width: 760px; display: block; }
-  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 14px 0 4px; font-size: 13px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 14px 0 4px; font-size: 13px; color: var(--text); }
   .legend span { display: inline-flex; align-items: center; gap: 6px; }
   .legend i { width: 18px; height: 4px; border-radius: 3px; display: inline-block; }
   .wirecol-3v3 { background: var(--shade-3v3); }
@@ -125,7 +123,9 @@
   .wirecol-sda { background: var(--shade-sda); }
   .wirecol-scl { background: var(--shade-scl); }
   .wirecol-sig { background: var(--shade-sig); }
-  .wirecol-enc { background: var(--shade-enc); }
+  .wirecol-clk { background: var(--shade-clk); }
+  .wirecol-dt  { background: var(--shade-dt); }
+  .wirecol-sw  { background: var(--shade-sw); }
   .wirecol-vs  { background: var(--shade-vs); }
   .wirecol-ina { background: var(--shade-ina); }
   .wirecol-buzz{ background: var(--shade-buzz); }
@@ -134,6 +134,7 @@
   .pin-label { fill: #94a3b8; font-size: 10.5px; font-family: monospace; }
   .wire { fill: none; stroke-width: 3; stroke-linecap: round; }
   .series-tag { fill: #fda4c0; font-size: 11px; font-weight: 700; font-family: monospace; }
+  .tap-note { fill: #fb923c; font-size: 11px; font-weight: 700; font-family: monospace; }
   .oled { background: #0a0f04; border: 3px solid #1f3d1f; border-radius: 8px; width: 230px; height: 116px; padding: 8px; color: #9effa0; font-family: monospace; }
   .oled .l1 { display: flex; justify-content: space-between; font-size: 12px; }
   .oled .big { font-size: 34px; line-height: 1; text-align: center; margin: 2px 0; }
@@ -141,10 +142,10 @@
   .oled .tel { font-size: 11px; text-align: center; }
   .oled .bar { height: 8px; border: 1px solid #9effa0; border-radius: 3px; margin-top: 6px; }
   .oled .bar i { display: block; height: 100%; background: #9effa0; width: 50%; }
-  footer { text-align: center; color: var(--ink-soft); font-size: 13px; margin: 40px 0 0; }
+  footer { text-align: center; color: var(--muted); font-size: 13px; margin: 40px 0 0; }
   .steps { counter-reset: step; list-style: none; padding-left: 0; }
-  .steps li { position: relative; padding: 8px 8px 8px 42px; margin: 8px 0; background: var(--bg-soft); border-radius: 8px; }
-  .steps li::before { counter-increment: step; content: counter(step); position: absolute; left: 10px; top: 8px; width: 22px; height: 22px; background: var(--accent); color: #fff; border-radius: 50%; text-align: center; font-weight: 700; font-size: 13px; line-height: 22px; }
+  .steps li { position: relative; padding: 8px 8px 8px 42px; margin: 8px 0; background: var(--panel); border-radius: 8px; }
+  .steps li::before { counter-increment: step; content: counter(step); position: absolute; left: 10px; top: 8px; width: 22px; height: 22px; background: var(--accent); color: #06121f; border-radius: 50%; text-align: center; font-weight: 700; font-size: 13px; line-height: 22px; }
   @media (max-width: 920px) {
     .wrap { flex-direction: column; }
     .toc { position: static; width: 100%; height: auto; padding: 10px 0; border-bottom: 1px solid var(--border); }
@@ -152,7 +153,7 @@
     .toc a { border-left: none; border: 1px solid var(--border); }
     .toc ol ol { display: none; }
   }
-  @media print { .toc { display: none; } .card, .hero { box-shadow: none; } body { background: #fff; } }
+  @media print { .toc { display: none; } .card, .hero { box-shadow: none; } body { background: #fff; color: #000; } }
 </style>
 </head>
 <body>
@@ -341,9 +342,9 @@
           <tr class="bg-sda"><td class="pin-sig s-sda">OLED SDA</td><td>GPIO6</td><td>SDA de la OLED (y del INA219, mismo bus I²C).</td></tr>
           <tr class="bg-scl"><td class="pin-sig s-scl">OLED SCL</td><td>GPIO7</td><td>SCL de la OLED (y del INA219).</td></tr>
           <tr class="bg-sig"><td class="pin-sig s-sig">Servo señal</td><td>GPIO10</td><td>Cable de señal del servo (naranja/amarillo). 3.3 V lógico.</td></tr>
-          <tr class="bg-enc"><td class="pin-sig s-enc">Encoder CLK</td><td>GPIO4</td><td>CLK del HW-040 (interrupción CHANGE).</td></tr>
-          <tr class="bg-enc"><td class="pin-sig s-enc">Encoder DT</td><td>GPIO5</td><td>DT del HW-040 (sentido de giro).</td></tr>
-          <tr class="bg-enc"><td class="pin-sig s-enc">Encoder SW</td><td>GPIO20</td><td>Pulsador (SW) del HW-040 (interrupción FALLING).</td></tr>
+          <tr class="bg-clk"><td class="pin-sig s-clk">Encoder CLK</td><td>GPIO4</td><td>CLK del HW-040 (interrupción CHANGE).</td></tr>
+          <tr class="bg-dt"><td class="pin-sig s-dt">Encoder DT</td><td>GPIO5</td><td>DT del HW-040 (sentido de giro).</td></tr>
+          <tr class="bg-sw"><td class="pin-sig s-sw">Encoder SW</td><td>GPIO20</td><td>Pulsador (SW) del HW-040 (interrupción FALLING).</td></tr>
           <tr class="bg-vs"><td class="pin-sig s-vs">V-sense</td><td>GPIO3</td><td>Punto medio del divisor 10k/10k (desde el 5 V del servo). ADC1 ch3.</td></tr>
           <tr class="bg-buzz"><td class="pin-sig s-buzz">Buzzer</td><td>GPIO21</td><td>Zumbador piezo (activo a nivel alto).</td></tr>
           <tr class="bg-gnd"><td class="pin-sig s-gnd">GND</td><td>GND</td><td>Masa común (OLED, encoder, INA219, servo, fuente 5 V).</td></tr>
@@ -360,8 +361,8 @@
 
     <!-- 5. DIAGRAM -->
     <section id="diagrama" class="card">
-      <h2>5. Diagrama de conexión (visual)</h2>
-      <p>Colores por tipo de señal. Observa especialmente que el <span class="pin-sig s-ina">INA219 va en serie</span> entre la fuente 5 V y el V+ del servo: la corriente del servo lo atraviesa.</p>
+      <h2>5. Diagrama de conexión (esquemático a color)</h2>
+      <p>Cada color representa un tipo de señal (ver leyenda). Observa especialmente que el <span class="pin-sig s-ina">INA219 va en serie</span> entre la fuente 5 V (naranja) y el V+ del servo (naranja): la corriente del servo lo atraviesa. El <span class="pin-sig s-vs">divisor</span> deriva el 5 V hacia GPIO3 (también naranja, etiquetado “a GPIO3”).</p>
 
       <div class="legend">
         <span><i class="wirecol-3v3"></i> 3.3 V (lógica)</span>
@@ -369,71 +370,115 @@
         <span><i class="wirecol-sda"></i> SDA (I²C)</span>
         <span><i class="wirecol-scl"></i> SCL (I²C)</span>
         <span><i class="wirecol-sig"></i> Señal servo</span>
-        <span><i class="wirecol-enc"></i> CLK / DT / SW</span>
-        <span><i class="wirecol-vs"></i> V-sense (divisor)</span>
+        <span><i class="wirecol-clk"></i> Encoder CLK</span>
+        <span><i class="wirecol-dt"></i> Encoder DT</span>
+        <span><i class="wirecol-sw"></i> Encoder SW</span>
+        <span><i class="wirecol-vs"></i> 5 V servo / V-sense (divisor)</span>
         <span><i class="wirecol-ina"></i> 5 V en serie (INA219)</span>
         <span><i class="wirecol-buzz"></i> Buzzer</span>
       </div>
 
       <div class="diagram">
-        <svg viewBox="0 0 820 430" role="img" aria-label="Diagrama de conexión del Servo Tester Nivel 2">
-          <rect class="chip" x="300" y="40" width="220" height="300" rx="10"/>
-          <text class="chip-label" x="410" y="60" text-anchor="middle">ESP32-C3 Super Mini</text>
+        <svg viewBox="0 0 900 580" role="img" aria-label="Esquemático de conexión del Servo Tester Nivel 2">
+          <!-- ===== Boxes ===== -->
+          <rect class="chip" x="330" y="60" width="240" height="410" rx="10"/>
+          <text class="chip-label" x="450" y="80" text-anchor="middle">ESP32-C3 Super Mini</text>
 
-          <text class="pin-label" x="290" y="100" text-anchor="end">GPIO6 SDA</text>
-          <text class="pin-label" x="290" y="124" text-anchor="end">GPIO7 SCL</text>
-          <text class="pin-label" x="290" y="148" text-anchor="end">GPIO10 SIG</text>
-          <text class="pin-label" x="290" y="172" text-anchor="end">GPIO4 CLK</text>
-          <text class="pin-label" x="290" y="196" text-anchor="end">GPIO5 DT</text>
-          <text class="pin-label" x="290" y="220" text-anchor="end">GPIO20 SW</text>
-          <text class="pin-label" x="290" y="244" text-anchor="end">GPIO3 V-sense</text>
-          <text class="pin-label" x="290" y="268" text-anchor="end">GPIO21 BUZ</text>
-          <text class="pin-label" x="290" y="292" text-anchor="end">GND</text>
-          <text class="pin-label" x="290" y="316" text-anchor="end">3V3</text>
+          <rect class="chip" x="70" y="85" width="140" height="72" rx="8"/>
+          <text class="chip-label" x="140" y="124" text-anchor="middle">OLED 0x3C</text>
 
-          <rect class="chip" x="40" y="80" width="120" height="70" rx="8"/>
-          <text class="chip-label" x="100" y="118" text-anchor="middle">OLED 0x3C</text>
-          <line class="wire wirecol-sda" x1="160" y1="100" x2="300" y2="100"/>
-          <line class="wire wirecol-scl" x1="160" y1="124" x2="300" y2="124"/>
-          <line class="wire wirecol-gnd" x1="160" y1="146" x2="300" y2="292"/>
+          <rect class="chip" x="70" y="195" width="140" height="98" rx="8"/>
+          <text class="chip-label" x="140" y="246" text-anchor="middle">HW-040</text>
 
-          <rect class="chip" x="40" y="170" width="120" height="80" rx="8"/>
-          <text class="chip-label" x="100" y="210" text-anchor="middle">HW-040</text>
-          <line class="wire wirecol-enc" x1="160" y1="172" x2="300" y2="172"/>
-          <line class="wire wirecol-enc" x1="160" y1="196" x2="300" y2="196"/>
-          <line class="wire wirecol-enc" x1="160" y1="220" x2="300" y2="220"/>
+          <rect class="chip" x="70" y="320" width="140" height="58" rx="8"/>
+          <text class="chip-label" x="140" y="354" text-anchor="middle">BUZZER</text>
 
-          <rect class="chip" x="40" y="300" width="120" height="50" rx="8"/>
-          <text class="chip-label" x="100" y="330" text-anchor="middle">BUZZER</text>
-          <line class="wire wirecol-buzz" x1="160" y1="320" x2="300" y2="268"/>
+          <rect class="chip" x="720" y="110" width="150" height="110" rx="8"/>
+          <text class="chip-label" x="795" y="170" text-anchor="middle">SERVO</text>
 
-          <line class="wire wirecol-3v3" x1="300" y1="316" x2="160" y2="316"/>
-          <line class="wire wirecol-3v3" x1="160" y1="316" x2="100" y2="150"/>
+          <rect class="chip" x="560" y="330" width="180" height="100" rx="8"/>
+          <text class="chip-label" x="650" y="368" text-anchor="middle">INA219</text>
+          <text class="series-tag" x="566" y="392" text-anchor="start">EN SERIE</text>
 
-          <rect class="chip" x="300" y="358" width="220" height="60" rx="8"/>
-          <text class="chip-label" x="410" y="386" text-anchor="middle">Divisor 10k / 10k</text>
-          <line class="wire wirecol-vs" x1="300" y1="244" x2="300" y2="388"/>
-          <line class="wire wirecol-gnd" x1="410" y1="418" x2="410" y2="388"/>
-          <line class="wire wirecol-vs" x1="520" y1="388" x2="700" y2="388"/>
+          <rect class="chip" x="560" y="470" width="180" height="56" rx="8"/>
+          <text class="chip-label" x="650" y="503" text-anchor="middle">FUENTE 5 V</text>
 
-          <rect class="chip" x="700" y="120" width="100" height="90" rx="8"/>
-          <text class="chip-label" x="750" y="158" text-anchor="middle">SERVO</text>
-          <line class="wire wirecol-sig" x1="520" y1="148" x2="700" y2="148"/>
-          <line class="wire wirecol-gnd" x1="520" y1="200" x2="700" y2="200"/>
-          <text class="pin-label" x="610" y="140" text-anchor="middle">señal</text>
-          <text class="pin-label" x="610" y="192" text-anchor="middle">GND</text>
+          <rect class="chip" x="770" y="470" width="110" height="60" rx="8"/>
+          <text class="chip-label" x="825" y="488" text-anchor="middle" font-size="10">DIVISOR</text>
+          <text class="chip-label" x="825" y="503" text-anchor="middle" font-size="10">10k / 10k</text>
 
-          <rect class="chip" x="590" y="300" width="130" height="70" rx="8"/>
-          <text class="chip-label" x="655" y="330" text-anchor="middle">INA219</text>
-          <text class="series-tag" x="585" y="295">EN SERIE +5V</text>
-          <line class="wire wirecol-ina" x1="700" y1="388" x2="655" y2="370"/>
-          <line class="wire wirecol-ina" x1="655" y1="300" x2="700" y2="210"/>
-          <line class="wire wirecol-sda" x1="590" y1="330" x2="300" y2="100"/>
-          <line class="wire wirecol-scl" x1="590" y1="345" x2="300" y2="124"/>
+          <!-- ===== Left pins (labels) ===== -->
+          <text class="pin-label" x="318" y="103" text-anchor="end">GPIO6 SDA</text>
+          <text class="pin-label" x="318" y="131" text-anchor="end">GPIO7 SCL</text>
+          <text class="pin-label" x="318" y="159" text-anchor="end">GPIO4 CLK</text>
+          <text class="pin-label" x="318" y="187" text-anchor="end">GPIO5 DT</text>
+          <text class="pin-label" x="318" y="215" text-anchor="end">GPIO20 SW</text>
+          <text class="pin-label" x="318" y="243" text-anchor="end">GPIO21 BUZ</text>
+          <text class="pin-label" x="318" y="278" text-anchor="end">3V3</text>
+          <text class="pin-label" x="318" y="308" text-anchor="end">GND</text>
 
-          <rect class="chip" x="590" y="388" width="130" height="36" rx="8"/>
-          <text class="chip-label" x="655" y="411" text-anchor="middle">FUENTE 5V</text>
-          <line class="wire wirecol-ina" x1="655" y1="388" x2="655" y2="370" stroke-dasharray="4 3"/>
+          <!-- ===== Left component pins ===== -->
+          <text class="pin-label" x="212" y="108" text-anchor="start">SDA</text>
+          <text class="pin-label" x="212" y="132" text-anchor="start">SCL</text>
+          <text class="pin-label" x="212" y="150" text-anchor="start">GND</text>
+          <text class="pin-label" x="212" y="166" text-anchor="start">VCC</text>
+
+          <text class="pin-label" x="212" y="218" text-anchor="start">CLK</text>
+          <text class="pin-label" x="212" y="242" text-anchor="start">DT</text>
+          <text class="pin-label" x="212" y="266" text-anchor="start">SW</text>
+          <text class="pin-label" x="212" y="284" text-anchor="start">GND</text>
+          <text class="pin-label" x="212" y="300" text-anchor="start">VCC</text>
+
+          <text class="pin-label" x="212" y="343" text-anchor="start">+</text>
+          <text class="pin-label" x="212" y="363" text-anchor="start">GND</text>
+
+          <!-- ===== Right pins ===== -->
+          <text class="pin-label" x="582" y="163" text-anchor="start">GPIO10 SIG</text>
+          <text class="pin-label" x="582" y="303" text-anchor="start">GPIO3 V-sense</text>
+
+          <!-- ===== Wires: I2C bus over the top ===== -->
+          <path class="wire wirecol-sda" d="M318,100 H210 V108 H210"/>
+          <path class="wire wirecol-sda" d="M318,100 V45 H560 V355"/>
+          <path class="wire wirecol-scl" d="M318,128 H210 V132"/>
+          <path class="wire wirecol-scl" d="M318,128 V52 H560 V380"/>
+
+          <!-- ===== Encoder ===== -->
+          <path class="wire wirecol-clk" d="M318,159 H210 V218"/>
+          <path class="wire wirecol-dt"  d="M318,187 H210 V242"/>
+          <path class="wire wirecol-sw"  d="M318,215 H210 V266"/>
+
+          <!-- ===== Buzzer ===== -->
+          <path class="wire wirecol-buzz" d="M318,243 H210 V343"/>
+
+          <!-- ===== 3.3 V rail (red) ===== -->
+          <path class="wire wirecol-3v3" d="M318,278 H210 V166"/>
+          <path class="wire wirecol-3v3" d="M318,278 H210 V300"/>
+
+          <!-- ===== GND rail (slate) at bottom ===== -->
+          <line class="wire wirecol-gnd" x1="120" y1="548" x2="820" y2="548"/>
+          <path class="wire wirecol-gnd" d="M318,308 V548"/>
+          <path class="wire wirecol-gnd" d="M210,150 V548"/>
+          <path class="wire wirecol-gnd" d="M210,284 V548"/>
+          <path class="wire wirecol-gnd" d="M210,363 V548"/>
+          <path class="wire wirecol-gnd" d="M720,200 V548"/>
+          <path class="wire wirecol-gnd" d="M560,430 V548"/>
+          <path class="wire wirecol-gnd" d="M650,526 V548"/>
+
+          <!-- ===== Servo signal (yellow) ===== -->
+          <path class="wire wirecol-sig" d="M570,160 H720 V145"/>
+
+          <!-- ===== 5 V servo supply: source -> INA219 -> servo (orange, in series) ===== -->
+          <path class="wire wirecol-ina" d="M650,470 V430"/>
+          <path class="wire wirecol-ina" d="M650,330 V165 H720"/>
+          <text class="pin-label" x="735" y="160" text-anchor="start" fill="#fb923c">V+</text>
+
+          <!-- ===== Divider tap from 5 V (orange) "a GPIO3" ===== -->
+          <path class="wire wirecol-vs" d="M650,470 H770 V490"/>
+          <path class="wire wirecol-vs" d="M770,510 V300 H570"/>
+          <text class="tap-note" x="612" y="296" text-anchor="middle">a GPIO3</text>
+
+          <!-- Servo GND/V+ labels -->
+          <text class="pin-label" x="735" y="196" text-anchor="start" fill="#64748b">GND</text>
         </svg>
       </div>
 
@@ -443,7 +488,7 @@
       </div>
 
       <h4>Resumen de masa común</h4>
-      <p>El <b>GND</b> de la placa, OLED, encoder, INA219, servo y fuente de 5 V <strong>deben estar unidos</strong>. Sin masa común, la señal de control del servo no tiene referencia y el ADC/INA219 miden basura.</p>
+      <p>El <b>GND</b> de la placa, OLED, encoder, INA219, servo y fuente de 5 V <strong>deben estar unido</strong>. Sin masa común, la señal de control del servo no tiene referencia y el ADC/INA219 miden basura.</p>
     </section>
 
     <!-- 6. MODES -->
@@ -538,12 +583,418 @@
       <p>Código idéntico al del repositorio, con resaltado de sintaxis básico. Despliega para verlo entero.</p>
       <details>
         <summary>Mostrar / ocultar el código fuente completo de main.cpp</summary>
-        <pre><code>EOF
-cat /tmp/code.html >> /home/hywhook/servo-tester/nivel2/manual.html
-cat >> /home/hywhook/servo-tester/nivel2/manual.html <<'EOF'
-</code></pre>
+        <pre><code id="src-out"></code></pre>
       </details>
     </section>
+
+    <script id="src-code" type="text/plain">
+/*
+ * Servo Tester (Nivel 2) for ESP32-C3 Super Mini
+ * -------------------------------------------------
+ * EXTENDS Nivel 1: same architecture (MENU / MANUAL / SWEEP / CENTER / SETTINGS,
+ * encoder interrupt, OLED, servo, Preferences) PLUS an ANALYZER:
+ *   - Servo supply voltage via a 10k/10k resistor divider on ADC1 (GPIO3).
+ *   - Bus current + power via an INA219 in series with the servo 5 V line (I2C).
+ *   - Overcurrent / low-voltage alarm shown on the OLED and sounded on a buzzer.
+ *
+ * ENCODER CHOICE (unchanged from L1):
+ *   CHANGE-interrupt on CLK, reads DT, timestamp debounce. Rock-solid on the C3,
+ *   zero dependency risk. One detent == +/-1 degree (or +/-10 us / +/-50 mA).
+ *
+ * V-SENSE PIN CHOICE:
+ *   We use GPIO3 (ADC1 ch3) as specified. The C3 Super Mini routes GPIO1/3 to the
+ *   onboard CH340 USB-UART, which has a weak pull-up to 3.3 V. With a 10k/10k
+ *   divider the Thevenin source resistance is 5k, so a tens-of-kOhm board pull-up
+ *   only adds a small, fairly constant offset. That offset is removed by the
+ *   one-point calibration constant `vCal` (see README section 7). If you need
+ *   maximum accuracy, move the divider to GPIO1 (same situation) or cut the
+ *   CH340 pull-up; functionally either is fine.
+ *
+ * DEBUG NOTE (unchanged from L1):
+ *   Serial is UART0 (GPIO1/3); not exposed on USB. All feedback is on the OLED.
+ */
+
+#include <Arduino.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <ESP32Servo.h>
+#include <Preferences.h>
+#include <Adafruit_INA219.h>
+
+// ----------------------------- Pinout (3.3 V logic) -------------------------
+#define OLED_SDA   6
+#define OLED_SCL   7
+#define SERVO_PIN  10
+#define ENC_CLK    4
+#define ENC_DT     5
+#define ENC_SW     20
+#define VSENSE_PIN 3      // ADC1 ch3, 10k/10k divider from servo 5 V rail
+#define BUZZER_PIN 21     // active-high piezo buzzer
+
+// ----------------------------- OLED object ----------------------------------
+#define SCREEN_W 128
+#define SCREEN_H 64
+Adafruit_SSD1306 display(SCREEN_W, SCREEN_H, &Wire, -1);
+
+// ----------------------------- Servo ----------------------------------------
+Servo servo;
+
+// ----------------------------- INA219 (analyzer) ----------------------------
+Adafruit_INA219 ina219;           // default address 0x40
+
+// ----------------------------- Settings (persisted) -------------------------
+// Angle domain fixed at 0..180 deg. minUs/maxUs = pulse at 0/180 deg.
+// centerAngle = angle held in CENTER. iThresh = overcurrent alarm (mA).
+// vCal = calibration multiplier for the V divider.
+Preferences prefs;
+int   minUs       = 500;    // pulse width (us) at 0 deg
+int   maxUs       = 2500;   // pulse width (us) at 180 deg
+int   centerAngle = 90;     // angle held in CENTER mode
+int   iThresh     = 800;    // overcurrent threshold (mA)
+float vCal        = 1.0;    // divider calibration constant
+
+const int minAng = 0;
+const int maxAng = 180;
+
+// ----------------------------- Encoder (interrupt based) --------------------
+volatile int  encoderDelta = 0;
+volatile unsigned long lastEncMs = 0;
+volatile bool buttonFlag = false;
+volatile unsigned long lastBtnMs = 0;
+
+// ----------------------------- State machine --------------------------------
+enum Mode { MENU, MANUAL, SWEEP, CENTER, SETTINGS };
+Mode mode = MENU;
+const char* modeNames[] = { "MENU", "MANUAL", "SWEEP", "CENTER", "SETTINGS" };
+
+int menuIndex = 0;
+const int MENU_COUNT = 4;
+
+// SETTINGS sub-fields: 0=minUs, 1=maxUs, 2=center, 3=iThresh
+int settingField = 0;
+const int SETTINGS_FIELDS = 4;
+
+int angle = 90;
+
+// ----------------------------- Analyzer sample ------------------------------
+float vServo = 0.0;   // supply voltage from divider (V)
+float iServo = 0.0;   // current from INA219 (mA)
+float pServo = 0.0;   // power = V * I (W)
+bool  alarmOn  = false; // overcurrent or low voltage
+
+// ----------------------------- ISRs -----------------------------------------
+void IRAM_ATTR encoderISR() {
+  unsigned long now = millis();
+  if (now - lastEncMs < 5) return;     // 5 ms timestamp debounce
+  lastEncMs = now;
+  int clk = digitalRead(ENC_CLK);
+  if (clk == HIGH) {                   // count on rising edge of CLK
+    int dt = digitalRead(ENC_DT);
+    encoderDelta += (dt == LOW) ? 1 : -1;   // CW vs CCW
+  }
+}
+
+void IRAM_ATTR buttonISR() {
+  unsigned long now = millis();
+  if (now - lastBtnMs < 50) return;    // 50 ms debounce
+  lastBtnMs = now;
+  buttonFlag = true;
+}
+
+// ----------------------------- Helpers --------------------------------------
+int angleToUs(int a) {
+  a = constrain(a, minAng, maxAng);
+  return (int)map((long)a, minAng, maxAng, minUs, maxUs);
+}
+
+int sweepAngle() {
+  unsigned long half = 1500;
+  unsigned long t = millis();
+  unsigned long phase = t % (2 * half);
+  int a;
+  if (phase < half) a = (int)map((long)phase, 0, (long)half, 0, 180);
+  else              a = (int)map((long)phase, (long)half, 2 * (long)half, 180, 0);
+  return constrain(a, 0, 180);
+}
+
+void loadSettings() {
+  prefs.begin("servotester", true);   // read-only
+  minUs       = prefs.getUInt("minUs", 500);
+  maxUs       = prefs.getUInt("maxUs", 2500);
+  centerAngle = prefs.getUInt("center", 90);
+  iThresh     = prefs.getUInt("iThresh", 800);
+  vCal        = prefs.getFloat("vCal", 1.0);
+  prefs.end();
+  minUs       = constrain(minUs, 400, 1500);
+  maxUs       = constrain(maxUs, 1500, 2600);
+  centerAngle = constrain(centerAngle, 0, 180);
+  iThresh     = constrain(iThresh, 100, 5000);
+  if (vCal <= 0.0 || isnan(vCal)) vCal = 1.0;
+}
+
+void saveSettings() {
+  prefs.begin("servotester", false);  // read-write
+  prefs.putUInt("minUs",   (unsigned int)minUs);
+  prefs.putUInt("maxUs",   (unsigned int)maxUs);
+  prefs.putUInt("center",  (unsigned int)centerAngle);
+  prefs.putUInt("iThresh", (unsigned int)iThresh);
+  prefs.putFloat("vCal",   vCal);
+  prefs.end();
+}
+
+// Read the servo supply voltage from the 10k/10k divider on GPIO3.
+// Vservo = adc * (3.3/4095) * 2.0, corrected by the calibration constant.
+float readVservo() {
+  int raw = analogRead(VSENSE_PIN);
+  float v = raw * (3.3f / 4095.0f) * 2.0f * vCal;
+  return v;
+}
+
+// Read current (mA) and bus voltage (V) from the INA219; derive power (W).
+void readINA219() {
+  float busV = ina219.getBusVoltage_V();
+  iServo = ina219.getCurrent_mA();
+  pServo = busV * (iServo / 1000.0f);
+}
+
+// Buzzer driver: beep while alarm is active, silent otherwise.
+void updateBuzzer() {
+  static unsigned long lastBeep = 0;
+  static bool beepState = false;
+  if (alarmOn) {
+    if (millis() - lastBeep > 250) {   // ~2 Hz beep
+      lastBeep = millis();
+      beepState = !beepState;
+      digitalWrite(BUZZER_PIN, beepState);
+    }
+  } else {
+    digitalWrite(BUZZER_PIN, LOW);
+    beepState = false;
+  }
+}
+
+// Evaluate the analyzer alarm conditions.
+void updateAlarm() {
+  alarmOn = (iServo > (float)iThresh) || (vServo < 4.5f);
+}
+
+// ----------------------------- Input handling -------------------------------
+void handleInput() {
+  noInterrupts();
+  int d = encoderDelta;
+  encoderDelta = 0;
+  interrupts();
+
+  if (d != 0) {
+    switch (mode) {
+      case MENU:
+        menuIndex = constrain(menuIndex + d, 0, MENU_COUNT - 1);
+        break;
+      case MANUAL:
+        angle = constrain(angle + d, minAng, maxAng);
+        break;
+      case SETTINGS:
+        if (settingField == 0)      minUs       = constrain(minUs + d * 10, 400, 1500);
+        else if (settingField == 1) maxUs       = constrain(maxUs + d * 10, 1500, 2600);
+        else if (settingField == 2) centerAngle = constrain(centerAngle + d, 0, 180);
+        else                        iThresh     = constrain(iThresh + d * 50, 100, 5000);
+        break;
+      default:
+        break; // SWEEP / CENTER ignore the encoder
+    }
+  }
+
+  noInterrupts();
+  bool b = buttonFlag;
+  buttonFlag = false;
+  interrupts();
+
+  if (b) {
+    switch (mode) {
+      case MENU:
+        if      (menuIndex == 0) mode = MANUAL;
+        else if (menuIndex == 1) mode = SWEEP;
+        else if (menuIndex == 2) mode = CENTER;
+        else if (menuIndex == 3) { mode = SETTINGS; settingField = 0; }
+        break;
+      case MANUAL:
+      case SWEEP:
+      case CENTER:
+        mode = MENU;
+        break;
+      case SETTINGS:
+        settingField++;
+        if (settingField >= SETTINGS_FIELDS) {
+          saveSettings();
+          mode = MENU;
+        }
+        break;
+    }
+  }
+}
+
+// ----------------------------- Rendering -------------------------------------
+void drawGauge(int ang) {
+  int x = 4, y = 56, w = SCREEN_W - 8, h = 6;
+  display.drawRect(x, y, w, h, WHITE);
+  int fill = map(constrain(ang, 0, 180), 0, 180, 0, w);
+  display.fillRect(x, y, fill, h, WHITE);
+}
+
+// Analyzer-aware servo screen: angle, pulse, gauge, V/I rows, alarm flag.
+void drawServo(const char* label, int ang) {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 0);
+  display.print(label);
+
+  // Alarm indicator at top-right.
+  if (alarmOn) {
+    display.setCursor(80, 0);
+    display.print("ALARMA");
+  }
+
+  display.setTextSize(3);
+  display.setCursor(20, 14);
+  display.print(ang);
+
+  display.setTextSize(1);
+  display.setCursor(0, 42);
+  display.print(angleToUs(ang));
+  display.print(" us");
+
+  display.setCursor(0, 42 + 10);
+  display.print("V:");
+  display.print(vServo, 2);
+  display.print("V I:");
+  display.print((int)iServo);
+  display.print("mA");
+
+  drawGauge(ang);
+  display.display();
+}
+
+void drawMenu() {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 0);
+  display.println("MENU");
+
+  const char* items[] = { "MANUAL", "SWEEP", "CENTER", "SETTINGS" };
+  for (int i = 0; i < MENU_COUNT; i++) {
+    display.setCursor(0, 14 + i * 10);
+    display.print(i == menuIndex ? "> " : "  ");
+    display.println(items[i]);
+  }
+  // Analyzer line at the bottom of the menu.
+  display.setCursor(0, 54);
+  display.print("V:");
+  display.print(vServo, 2);
+  display.print(" I:");
+  display.print((int)iServo);
+  display.print("mA");
+  display.display();
+}
+
+void drawSettings() {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0, 0);
+  display.println("SETTINGS");
+
+  display.print(settingField == 0 ? " >" : "  ");
+  display.print("minUs : "); display.println(minUs);
+  display.print(settingField == 1 ? " >" : "  ");
+  display.print("maxUs : "); display.println(maxUs);
+  display.print(settingField == 2 ? " >" : "  ");
+  display.print("center: "); display.println(centerAngle);
+  display.print(settingField == 3 ? " >" : "  ");
+  display.print("iThrsh: "); display.print(iThresh); display.println("mA");
+
+  display.setCursor(0, 54);
+  display.println("SW=next  turn=edit");
+  display.display();
+}
+
+// ----------------------------- Setup -----------------------------------------
+void setup() {
+  Serial.begin(115200);                 // UART0 only; NOT visible over USB
+
+  pinMode(BUZZER_PIN, OUTPUT);
+  digitalWrite(BUZZER_PIN, LOW);
+
+  // ADC for the V divider: 12-bit, full 0..3.3 V range.
+  analogReadResolution(12);
+  analogSetAttenuation(ADC_11db);
+  pinMode(VSENSE_PIN, INPUT);
+
+  Wire.begin(OLED_SDA, OLED_SCL);
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    while (true) { delay(1000); }      // No OLED: fault obvious on the bench.
+  }
+  display.clearDisplay();
+  display.display();
+
+  // INA219 on the same I2C bus (address 0x40). Halt if missing so the bench
+  // fault is clear. 32 V / 2 A calibration covers standard hobby servos.
+  if (!ina219.begin(&Wire)) {
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.println("INA219 ??");
+    display.display();
+    while (true) { delay(1000); }
+  }
+  ina219.setCalibration_32V_2A();
+
+  loadSettings();
+  servo.attach(SERVO_PIN, minUs, maxUs);
+
+  pinMode(ENC_CLK, INPUT_PULLUP);
+  pinMode(ENC_DT,  INPUT_PULLUP);
+  pinMode(ENC_SW,  INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(ENC_CLK), encoderISR, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ENC_SW),  buttonISR, FALLING);
+}
+
+// ----------------------------- Loop ------------------------------------------
+void loop() {
+  handleInput();
+
+  // Sample the analyzer every frame.
+  vServo = readVservo();
+  readINA219();
+  updateAlarm();
+  updateBuzzer();
+
+  int driveAngle = angle;
+  switch (mode) {
+    case MANUAL:   driveAngle = angle;       break;
+    case CENTER:   driveAngle = centerAngle; angle = centerAngle; break;
+    case SWEEP:    driveAngle = sweepAngle(); angle = driveAngle; break;
+    case SETTINGS: driveAngle = angle;       break;
+    case MENU:     driveAngle = -1;          break;
+  }
+
+  if (mode != MENU) {
+    servo.writeMicroseconds(angleToUs(driveAngle));
+  }
+
+  switch (mode) {
+    case MENU:    drawMenu();                        break;
+    case MANUAL:  drawServo("MANUAL", angle);        break;
+    case SWEEP:   drawServo("SWEEP", sweepAngle());   break;
+    case CENTER:  drawServo("CENTER", centerAngle);   break;
+    case SETTINGS: drawSettings();                   break;
+  }
+
+  delay(20); // ~50 Hz UI refresh, headroom for servo timing
+}
+</script>
 
     <!-- 9. CALIBRATION -->
     <section id="calibracion" class="card">
@@ -657,6 +1108,7 @@ pio device monitor</code></pre>
 
 <script>
 (function () {
+  // ---- TOC scroll-spy ----
   var links = Array.prototype.slice.call(document.querySelectorAll('#toc a'));
   var sections = links.map(function (a) {
     return document.querySelector(a.getAttribute('href'));
@@ -673,6 +1125,37 @@ pio device monitor</code></pre>
   }
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
+
+  // ---- C++ syntax highlighter for the full source ----
+  function esc(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  var KW = new Set(['void','int','float','bool','const','if','else','for','while','switch',
+    'case','default','return','unsigned','long','char','static','include','define','struct',
+    'enum','class','public','private','true','false','null','auto','using','namespace',
+    'volatile','digitalRead','digitalWrite','analogRead','pinMode','millis','map','constrain',
+    'delay','attachInterrupt','noInterrupts','interrupts','begin','end']);
+  function highlight(src) {
+    var re = /(\/\*[\s\S]*?\*\/|\/\/[^\n]*)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(\b\d+\.?\d*[fUL]?\b)|(#[A-Za-z_]+)|([A-Za-z_]\w*)/g;
+    var out = '', last = 0, m;
+    while ((m = re.exec(src))) {
+      out += esc(src.slice(last, m.index));
+      var tok = m[0];
+      if (m[1]) out += '<span class="tk-com">' + esc(tok) + '</span>';
+      else if (m[2]) out += '<span class="tk-str">' + esc(tok) + '</span>';
+      else if (m[3]) out += '<span class="tk-num">' + esc(tok) + '</span>';
+      else if (m[4]) out += '<span class="tk-pre">' + esc(tok) + '</span>';
+      else if (m[5]) out += KW.has(tok) ? '<span class="tk-key">' + esc(tok) + '</span>' : esc(tok);
+      last = re.lastIndex;
+    }
+    out += esc(src.slice(last));
+    return out;
+  }
+  var srcEl = document.getElementById('src-code');
+  var outEl = document.getElementById('src-out');
+  if (srcEl && outEl) {
+    outEl.innerHTML = highlight(srcEl.textContent.replace(/^\n/, '').replace(/\n$/, ''));
+  }
 })();
 </script>
 </body>
